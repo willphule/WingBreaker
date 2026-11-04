@@ -159,6 +159,10 @@
     bike: { bpm: 150, root: 47, prog: [[0, 4, 7], [-3, 0, 4], [-5, -1, 2], [-7, -3, 0]], bass: 'x.x.x.x.x.x.x.x.', kick: 'x...x...x...x...', snare: '....x.......x...', hat: 'xxxxxxxxxxxxxxxx', arp: 1, lead: 0.5 },
     foot: { bpm: 108, root: 38, prog: [[0, 3, 7], [0, 3, 7], [-2, 2, 5], [-4, 0, 3]], bass: 'x..x....x..x..x.', kick: 'x.....x...x.....', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', arp: 2, lead: 0.3 },
     gauntlet: { bpm: 168, root: 46, prog: [[0, 3, 7], [3, 7, 10], [-2, 2, 5], [-4, 0, 3]], bass: 'xxxxxxxxxxxxxxxx', kick: 'x...x...x...x...', snare: '....x.......x...', hat: '..x...x...x...x.', arp: 1, lead: 0.6 },
+    frost: { bpm: 122, root: 44, prog: [[0, 3, 7], [-4, 0, 3], [-2, 2, 5], [-5, -2, 2]], bass: 'x...x.x.x...x.x.', kick: 'x.......x.......', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', arp: 1, lead: 0.4, pad: true },
+    lava: { bpm: 136, root: 38, prog: [[0, 3, 7], [1, 4, 8], [0, 3, 7], [-2, 1, 5]], bass: 'xx.xx.xxx.xx.x.x', kick: 'x..x..x.x..x..x.', snare: '....x.......x...', hat: '..x...x...x...x.', arp: 2, lead: 0.45 },
+    nebula: { bpm: 118, root: 43, prog: [[0, 4, 7], [-3, 0, 4], [2, 5, 9], [-5, -1, 2]], bass: 'x.....x...x.....', kick: 'x.......x...x...', snare: '....x.......x...', hat: '.xx..xx..xx..xx.', arp: 2, lead: 0.4, pad: true },
+    ace: { bpm: 162, root: 45, prog: [[0, 3, 7], [-2, 2, 5], [-4, 0, 3], [-5, -1, 2]], bass: 'xxx.xxx.xxx.xxx.', kick: 'x...x...x...x...', snare: '....x.......x..x', hat: 'xxxxxxxxxxxxxxxx', arp: 1, lead: 0.6 },
     victory: { bpm: 110, root: 48, prog: [[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7]], bass: 'x...x...x...x...', kick: 'x.......x.......', snare: '....x.......x...', hat: '..x...x...x...x.', arp: 2, lead: 0.5, pad: true },
   };
 

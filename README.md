@@ -26,15 +26,27 @@ This writes `dist/wingbreaker.html`.
 
 ## The campaign
 
-Eight missions across five stages. Each mission has a **bonus objective**. Completing one opens the harder upper route in the next stage, with better salvage. Otherwise you take the lower route. Every mission you have unlocked stays on the map for replays.
+Twelve missions across five stages and an epilogue. Each mission has a **bonus objective**. Completing one opens the harder upper route in the next stage, with better salvage. The middle and lower routes only need a clear. The middle route is all flight. Every mission you have unlocked stays on the map for replays.
 
-| Stage | Upper route (needs a bonus) | Standard route |
-|---|---|---|
-| 1 | Redstone Canyon: flight, destroy 3 relay pylons | |
-| 2 | Stormwall: flight, fly through 6 calm-eye rings | Saltflat Chase: speeder bike, wreck the courier |
-| 3 | Halcyon Dock: flight, destroy 4 power conduits | Scrapline Gauntlet: tunnel run, collect 60 power cells |
-| 4 | Boarding Action: on foot, recover 3 intel drives | Neon Undertow: night speeder chase, wreck the courier |
-| 5 | Crownfall: final flight, destroy 3 escort frigates | |
+| Stage | Upper route (needs a bonus) | Middle route (flight) | Lower route |
+|---|---|---|---|
+| 1 | | Redstone Canyon: destroy 3 relay pylons | |
+| 2 | Stormwall: fly through 6 calm-eye rings | Frostline Rift: free 4 captured pilots | Saltflat Chase: speeder bike, wreck the courier |
+| 3 | Halcyon Dock: destroy 4 power conduits | Caldera Run: destroy 5 magma pumps | Scrapline Gauntlet: tunnel run, collect 60 power cells |
+| 4 | Boarding Action: on foot, recover 3 intel drives | Lantern Escort: keep the Lantern above 50% hull | Neon Undertow: night speeder chase, wreck the courier |
+| 5 | | Crownfall: destroy 3 escort frigates | |
+| Epilogue | | Ace of Crowns: shoot down 8 Crown aces (opens after Crownfall) | |
+
+What each flight mission brings:
+
+- **Redstone Canyon.** Rock pillars, arches and walls with gaps. Boss: the Mesa Crawler.
+- **Stormwall.** Lightning strikes, crosswinds and mines. Boss: the Tempest Engine and its orbiting coils.
+- **Frostline Rift.** An ice canyon where icicles drop from above. Their shadows on the ice show where they will land. Boss: the Rime Harvester, with drill arms and an icicle cannon.
+- **Halcyon Dock.** Station tunnels with cycling laser gates, girders and ceiling turrets. Boss: the Gatekeeper.
+- **Caldera Run.** A lava field where vents glow before they erupt, and bombs arc in from the lava. Boss: the Forgeworm, a segmented worm that rises out of the lava.
+- **Lantern Escort.** Escort a crippled refugee carrier through a nebula. Raiders, marked with orange chevrons, shoot at the carrier instead of you, and the carrier gives covering fire. Boss: the carrier Spite, which launches fighters from its hangar bays.
+- **Crownfall.** An asteroid screen and escort frigates. Boss: the Hollow Crown dreadnought.
+- **Ace of Crowns.** A duel in high orbit with Veyra Solace, the Crown's top ace. She weaves hard, calls in wingmen as she weakens, and dives straight past you.
 
 The modes:
 
@@ -79,11 +91,11 @@ On touch screens, drag on the left half of the screen to steer and use the on-sc
 | `js/campaign.js` | Mission list and branching route rules |
 | `js/common.js` | Shield and hull model, HUD widgets, radio chatter, popups, 2D particles |
 | `js/models.js` | Flat-shaded polygon renderer and all low-poly models |
-| `js/flight.js` | Flight mode: themes, enemy behaviours, spawn patterns, bosses |
+| `js/flight.js` | Flight mode: themes, enemy behaviours, spawn patterns, hazards, escort logic, bosses |
 | `js/bike.js` | Speeder chase mode |
 | `js/foot.js` | On-foot mode and its deck map |
 | `js/gauntlet.js` | Gauntlet mode |
 | `js/ui.js` | Title, campaign map, hangar, results, pause, help and settings screens |
 | `js/main.js` | Main loop, scaling, mission flow and reward calculation |
 
-To jump straight into a mission while testing, add `?mission=<id>` to the URL, for example `index.html?mission=storm`. The mission ids are `canyon`, `storm`, `saltflat`, `dock`, `scrapline`, `boarding`, `undertow` and `crownfall`.
+To jump straight into a mission while testing, add `?mission=<id>` to the URL, for example `index.html?mission=storm`. The mission ids are `canyon`, `storm`, `frost`, `saltflat`, `dock`, `caldera`, `scrapline`, `boarding`, `lantern`, `undertow`, `crownfall` and `ace`.

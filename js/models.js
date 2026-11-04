@@ -410,4 +410,150 @@
     b.box(0, 6.2, 0, 1, 1, 1, '#ff5af0', true);
     return b.build();
   })();
+  // ---------- Frostline Rift ----------
+  L.iceRocks = [0, 1, 2].map(() => {
+    const b = new MB();
+    const cols = ['#9cc3df', '#b7d6ec', '#7fa9c9', '#d6e9f6'];
+    b.prism(0, 0, 0, 5, 1.7 + Math.random() * 0.7, 0.5 + Math.random() * 0.5, 15 + Math.random() * 6, '#a8cbe3', 0.4, cols);
+    return b.build();
+  });
+  L.icicle = (() => {
+    const b = new MB();
+    // Points downward: wide at the top, tip at the bottom.
+    b.prism(0, -3.2, 0, 5, 0.12, 1.1, 3.2, '#cfe8f8', 0.2, ['#cfe8f8', '#a6cde8', '#e6f4fc']);
+    b.prism(0, 0, 0, 5, 1.1, 0.8, 0.6, '#8fb8d6');
+    return b.build();
+  })();
+  L.cage = (() => {
+    const b = new MB();
+    b.box(0, 0, 0, 1.4, 1.4, 1.4, '#ffb347', true);
+    for (const [x, y] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) b.box(x * 1.05, y * 1.05, 0, 0.5, 0.5, 2.6, '#bfe0f4');
+    b.box(0, 1.15, 0, 2.6, 0.3, 2.6, '#9cc3df');
+    b.box(0, -1.15, 0, 2.6, 0.3, 2.6, '#9cc3df');
+    return b.build();
+  })();
+  L.harvesterBody = (() => {
+    const b = new MB();
+    b.box(0, 0, 0, 11, 4, 8, '#5d6f82');
+    b.box(0, 2.6, -1, 6, 1.6, 5, '#71849a');
+    b.box(0, -1.4, 4.6, 9, 1.4, 1.6, '#3b4757');
+    for (const s of [1, -1]) {
+      b.box(5.9 * s, 0, 1.5, 1.2, 1.2, 4, '#3b4757');
+      b.box(5.9 * s, -2.2, 0, 2.4, 1.4, 9, '#2c3542');
+    }
+    b.box(0, 0.4, 4.05, 3.5, 0.5, 0.1, '#5fd4ff', true);
+    return b.build();
+  })();
+  L.drill = (() => {
+    const b = new MB();
+    b.box(0, 0, -0.8, 1.8, 1.8, 1.6, '#3b4757');
+    // A cone pointing toward +z, built from triangles.
+    const n = 6, r = 1.2, len = 3.4;
+    for (let i = 0; i < n; i++) {
+      const a0 = (i / n) * Math.PI * 2, a1 = ((i + 1) / n) * Math.PI * 2;
+      b.poly([[Math.cos(a0) * r, Math.sin(a0) * r, 0], [Math.cos(a1) * r, Math.sin(a1) * r, 0], [0, 0, len]], i % 2 ? '#c9d6e2' : '#8fa3b6');
+    }
+    return b.build();
+  })();
+  L.iceCannon = (() => {
+    const b = new MB();
+    b.box(0, 0, 0, 3, 1.6, 3, '#4b5b6d');
+    b.box(0, 0.2, 2.2, 0.8, 0.8, 2.4, '#2c3542');
+    b.box(0, 0.2, 3.45, 0.6, 0.6, 0.1, '#bfe8ff', true);
+    return b.build();
+  })();
+
+  // ---------- Caldera Run ----------
+  L.basalt = [0, 1, 2].map(() => {
+    const b = new MB();
+    const cols = ['#2b1a17', '#3a221d', '#24140f', '#4a2a20'];
+    b.prism(0, 0, 0, 6, 1.8 + Math.random() * 0.6, 1.1 + Math.random() * 0.5, 13 + Math.random() * 6, '#33201b', 0.3, cols);
+    b.prism(0, 0, 0, 6, 2.3, 2.0, 0.6, '#ff6a2a', 0, null, true);
+    return b.build();
+  });
+  L.pump = (() => {
+    const b = new MB();
+    b.box(0, 0.8, 0, 3, 1.6, 3, '#4a3a35');
+    b.box(0, 2.6, 0, 1.2, 2.2, 1.2, '#6a5a52');
+    b.box(0, 3.9, 0, 2.2, 0.5, 0.6, '#2b211e');
+    b.box(0, 1.2, 1.55, 2.0, 0.6, 0.1, '#ff6a2a', true);
+    b.box(1.6, 0.6, 0, 0.3, 0.3, 4, '#2b211e');
+    return b.build();
+  })();
+  L.wormSeg = (() => {
+    const b = new MB();
+    b.prism(0, -1.6, 0, 8, 2.1, 2.1, 3.2, '#2b1a17', 0.05, ['#2b1a17', '#ff6a2a', '#3a221d', '#2b1a17']);
+    for (const a of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) b.box(Math.cos(a) * 2.2, Math.sin(a) * 2.2, 0, 0.7, 0.7, 1.6, '#4a2a20');
+    return b.build();
+  })();
+  L.wormHead = (() => {
+    const b = new MB();
+    b.prism(0, -2, 0, 8, 2.6, 2.4, 4, '#3a221d', 0.05, ['#3a221d', '#4a2a20']);
+    for (const s of [1, -1]) {
+      b.poly([[1.6 * s, 1.2, 1.5], [3.4 * s, 2.6, 3.4], [1.0 * s, 0.4, 2.2]], '#d9c7b0');
+      b.poly([[1.6 * s, -1.2, 1.5], [3.4 * s, -2.6, 3.4], [1.0 * s, -0.4, 2.2]], '#d9c7b0');
+    }
+    b.box(0, 0, 2.05, 2.4, 2.4, 0.1, '#ffd37a', true);
+    return b.build();
+  })();
+
+  // ---------- Lantern Escort ----------
+  L.lantern = (() => {
+    const b = new MB();
+    b.box(0, 0, 0, 4.4, 2.4, 16, '#c9d3e2');
+    b.box(0, 1.9, -3.5, 2.4, 1.4, 5, '#e2e6ef');
+    b.box(0, -0.4, 8.4, 3, 1.4, 1, '#8f9bb0');
+    for (const s of [1, -1]) {
+      b.box(3.4 * s, 0, -2, 2.2, 1.4, 10, '#2f6bff');
+      b.box(3.4 * s, 0, -7.1, 1.6, 1, 0.2, '#5fd4ff', true);
+      b.box(2.25 * s, 0.4, 2, 0.1, 0.4, 9, '#ffd37a', true);
+    }
+    b.box(0, 0, -8.05, 2.6, 1.6, 0.1, '#5fd4ff', true);
+    return b.build();
+  })();
+  L.carrierHull = (() => {
+    const b = new MB();
+    b.box(0, 0, 0, 22, 4.5, 16, '#3c3650');
+    b.box(0, 3.4, -3, 8, 2.4, 8, '#4a4363');
+    b.box(0, 5.5, -4, 3, 2, 3, '#5e5679');
+    for (const s of [1, -1]) b.box(12.5 * s, -0.5, 0, 3.5, 3, 14, '#2c273c');
+    return b.build();
+  })();
+  L.hangarBay = (() => {
+    const b = new MB();
+    b.box(0, 0, 0, 5, 3, 2, '#2c273c');
+    b.box(0, 0, 1.05, 3.8, 2, 0.1, '#ff9b3d', true);
+    b.box(0, 1.6, 1.05, 4.6, 0.25, 0.1, '#c77dff', true);
+    return b.build();
+  })();
+
+  // ---------- Ace of Crowns ----------
+  L.acedart = (() => {
+    const b = new MB();
+    const body = '#2a2338', wing = '#c77dff', trim = '#ffd37a';
+    const N = [0, 0, 2.0], Lf = [-0.5, 0, 0], R = [0.5, 0, 0], T = [0, 0.45, -0.2], B = [0, -0.3, -0.2], Tl = [0, 0, -1.2];
+    b.poly([N, T, R], body); b.poly([N, R, B], body); b.poly([N, B, Lf], body); b.poly([N, Lf, T], body);
+    b.poly([Tl, R, T], '#1b1626'); b.poly([Tl, B, R], '#1b1626'); b.poly([Tl, Lf, B], '#1b1626'); b.poly([Tl, T, Lf], '#1b1626');
+    for (const s of [1, -1]) {
+      b.poly([[0.4 * s, 0, -0.5], [2.1 * s, 0.4, 0.9], [1.9 * s, 0.4, -1.0]], wing);
+      b.poly([[2.1 * s, 0.4, 0.9], [2.2 * s, 0.4, 0.5], [2.0 * s, 1.0, 0.2]], trim);
+    }
+    b.poly([[-0.18, 0.14, 1.3], [0.18, 0.14, 1.3], [0, 0.28, 0.8]], trim, true);
+    return b.build();
+  })();
+  L.aceShip = (() => {
+    const b = new MB();
+    const body = '#1b1626', wing = '#e8e0f5', trim = '#c77dff', gold = '#ffd37a';
+    const N = [0, 0, 3.0], mT = [0, 0.7, 0.2], mR = [0.8, 0, 0.2], mB = [0, -0.5, 0.2], mL = [-0.8, 0, 0.2], Tl = [0, 0.1, -1.8];
+    b.poly([N, mT, mR], wing); b.poly([N, mR, mB], body); b.poly([N, mB, mL], body); b.poly([N, mL, mT], wing);
+    b.poly([Tl, mR, mT], body); b.poly([Tl, mB, mR], body); b.poly([Tl, mL, mB], body); b.poly([Tl, mT, mL], body);
+    for (const s of [1, -1]) {
+      b.poly([[0.6 * s, 0, 0.6], [3.4 * s, 0.6, -0.4], [3.6 * s, 0.6, -1.6], [0.6 * s, 0, -1.4]], trim);
+      b.poly([[3.4 * s, 0.6, -0.4], [3.6 * s, 0.6, -1.6], [3.7 * s, 1.5, -1.9]], gold);
+      b.poly([[0.6 * s, 0, 0.6], [2.4 * s, -0.8, 1.6], [0.6 * s, 0, -0.6]], wing);
+    }
+    b.poly([[0, 0.9, -0.4], [0.3, 0.55, 0.5], [0, 0.5, 1.5]], gold, true);
+    b.poly([[0, 0.9, -0.4], [0, 0.5, 1.5], [-0.3, 0.55, 0.5]], '#c99a3a', true);
+    return b.build();
+  })();
 })();

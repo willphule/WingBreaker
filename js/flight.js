@@ -45,6 +45,40 @@
       intro: [['harrow', 'All wings, this is it. Cut through the asteroid screen and break the Crown.'], ['vesk', 'Frigates are escorting the big one. Sink them and it gets a lot quieter.']],
       boss: 'space',
     },
+    frost: {
+      sky: ['#0d1a33', '#4f7aa8', '#cfe3f2'], fog: '#b4cde2', fogStart: 38, ground: ['#dfeaf3', '#cbdbe8'], walls: true,
+      wallCols: ['#7fa6c4', '#93b9d6', '#6a92b3'], wallSolid: '#7fa6c4', rockSet: 'iceRocks', snow: true, sun: '#f4fbff', sunGlow: '#cfe8ff',
+      music: 'frost', length: 82,
+      patterns: [['darts', 3], ['swoop', 2], ['pillars', 2.2], ['icefall', 2.6], ['drones', 1.5], ['wallgap', 1.4, 10], ['gunship', 1.2, 20], ['chasers', 1, 30], ['boostrings', 0.7]],
+      bonusTimes: [12, 26, 40, 54, 68], bonusKind: 'cage',
+      intro: [['juno', 'Frostline Rift. See the ice hanging up top? When a shadow shows on the ground, move!'], ['harrow', 'Our captured pilots are in ice cages along the rift. Shoot them loose.']],
+      boss: 'frost',
+    },
+    lava: {
+      sky: ['#120406', '#4a0d0a', '#b0391c'], fog: '#5c1c10', fogStart: 34, ground: ['#2a1410', '#22100d'], lava: true, walls: true,
+      wallCols: ['#2b1a17', '#3a221d', '#24140f'], wallSolid: '#2b1a17', rockSet: 'basalt', embers: true,
+      music: 'lava', length: 84,
+      patterns: [['darts', 3], ['turrets', 2], ['pillars', 2.4], ['geysers', 2.6], ['swoop', 2], ['lavabombs', 1.8], ['wallgap', 1.2, 14], ['gunship', 1.3, 20], ['chasers', 1, 30]],
+      bonusTimes: [10, 23, 36, 49, 62, 74], bonusKind: 'pump',
+      intro: [['vesk', 'Caldera Run. If the ground under you starts glowing, get out from over it.'], ['juno', 'Magma pumps on the lava flats. Wreck five and the Dock runs out of fuel!']],
+      boss: 'lava',
+    },
+    nebula: {
+      sky: ['#020a0e', '#06302f', '#12544c'], fog: '#0b3a38', fogStart: 55, stars: true, nebula: true, escort: true,
+      music: 'nebula', length: 88,
+      patterns: [['raiders', 3], ['darts', 2.4], ['swoop', 2], ['drones', 1.6], ['asteroids', 1.2], ['mines', 1], ['gunship', 1.3, 14], ['chasers', 1.1, 24]],
+      bonusTimes: [], bonusKind: 'escort',
+      intro: [['lantern', 'This is the Lantern. Two thousand people aboard and one engine left. Please keep them off us.'], ['harrow', 'The raiders will go for the Lantern, not you. Kill them before they line up their shots.']],
+      boss: 'carrier',
+    },
+    orbit: {
+      sky: ['#000005', '#05082a', '#1b2b6a'], fog: '#0a1238', fogStart: 60, stars: true, planetBelow: true,
+      music: 'ace', length: 74,
+      patterns: [['darts', 3], ['swoop', 2.5], ['chasers', 2, 8], ['gunship', 1.4, 12], ['mines', 1.2], ['drones', 1.5], ['boostrings', 0.8]],
+      bonusTimes: [9, 20, 31, 42, 53, 64], bonusKind: 'acewing',
+      intro: [['veyra', 'So you are the one who broke the Crown. I have waited a long time for this, Wingbreaker.'], ['vesk', 'That is Veyra Solace. Her wingmen fly the gold-trimmed darts. Thin them out first.']],
+      boss: 'ace',
+    },
   };
 
   const BOSSES = {
@@ -81,6 +115,39 @@
       core: { model: 'core', off: [0, 1.2, 9.8], hp: 760, r: 2, fire: { kind: 'ring', n: 14, cd: 2.0 }, fire2: { kind: 'sweep', cd: 4.5 } },
       line: ['crown', 'You are a gnat, pilot. Kneel, or burn with your Meridian.'],
     },
+    frost: {
+      name: 'RIME HARVESTER', body: 'harvesterBody', z: 40, y: -0.5, sway: [6, 1.2], swaySp: [0.42, 0.66], bodyCol: [{ x: 0, y: 0, w: 5.5, h: 2 }],
+      parts: [
+        { model: 'drill', off: [-5.9, 0, 4.2], hp: 220, r: 1.6, spin: 6, fire: { kind: 'spread', n: 4, cd: 2.6, delay: 0.5 } },
+        { model: 'drill', off: [5.9, 0, 4.2], hp: 220, r: 1.6, spin: -6, fire: { kind: 'spread', n: 4, cd: 2.6, delay: 1.8 } },
+        { model: 'iceCannon', off: [0, 3.6, 1.5], hp: 200, r: 1.8, fire: { kind: 'shards', cd: 3.6, delay: 1 } },
+      ],
+      core: { model: 'coreBlue', off: [0, 0.4, 4.4], hp: 540, r: 2.0, fire: { kind: 'ring', n: 10, cd: 2.4 } },
+      line: ['juno', 'That harvester is cutting the ice loose on purpose! Break off its drills, then hit the core!'],
+    },
+    lava: {
+      name: 'THE FORGEWORM', body: null, z: 38, y: 0.5, rise: -24, sway: [0, 0], swaySp: [0, 0],
+      parts: [1, 2, 3, 4, 5, 6].map((k) => ({ model: 'wormSeg', trail: k, off: [0, 0, 0], hp: 130, r: 2.2, fire: { kind: 'aimed', n: 1, cd: 3.2, delay: k * 0.5 } })),
+      core: { model: 'wormHead', trail: 0, off: [0, 0, 0], hp: 600, r: 2.4, fire: { kind: 'ring', n: 12, cd: 2.6 }, fire2: { kind: 'lavabombs', cd: 3.4 } },
+      line: ['vesk', 'I said do not wake it! Shoot the glowing segments. The head is armored until they break!'],
+    },
+    carrier: {
+      name: 'CROWN CARRIER SPITE', body: 'carrierHull', z: 50, y: 2, sway: [3, 1], swaySp: [0.3, 0.5], bodyCol: [{ x: 0, y: 0, w: 11, h: 2.3 }],
+      parts: [
+        { model: 'hangarBay', off: [-6, -0.5, 8.6], hp: 230, r: 2.4, fire: { kind: 'launch', n: 2, cd: 6, delay: 1 } },
+        { model: 'hangarBay', off: [6, -0.5, 8.6], hp: 230, r: 2.4, fire: { kind: 'launch', n: 2, cd: 6, delay: 4 } },
+        { model: 'battery', off: [-12.5, 0, 7.4], hp: 200, r: 2, fire: { kind: 'spread', n: 4, cd: 2.6, delay: 0.5 } },
+        { model: 'battery', off: [12.5, 0, 7.4], hp: 200, r: 2, fire: { kind: 'spread', n: 4, cd: 2.6, delay: 1.8 } },
+      ],
+      core: { model: 'core', off: [0, 5.6, -1.2], hp: 640, r: 1.8, fire: { kind: 'ring', n: 12, cd: 2.4 }, fire2: { kind: 'missiles', n: 2, cd: 4.5 } },
+      line: ['lantern', 'Carrier off our bow! It is launching fighters at us!'],
+    },
+    ace: {
+      name: 'VEYRA SOLACE', body: null, z: 34, y: 1, custom: 'ace', sway: [0, 0], swaySp: [0, 0],
+      parts: [],
+      core: { model: 'aceShip', off: [0, 0, 0], hp: 1300, r: 2.6, fire: { kind: 'aimed', n: 4, cd: 1.7 }, fire2: { kind: 'missiles', n: 2, cd: 5 } },
+      line: ['veyra', 'Enough of the little ones. Dance with me.'],
+    },
   };
 
   const EN = {
@@ -93,6 +160,10 @@
     missile: { model: null, hp: 6, r: 0.9, d: 0.8, scrap: 0 },
     pylon: { model: 'pylon', hp: 80, col: [{ x: 0, y: 5.5, w: 1.5, h: 6 }], d: 1.4, scrap: 15 },
     conduit: { model: 'conduit', hp: 60, col: [{ x: 0, y: 0, w: 1.2, h: 3 }], d: 1.2, scrap: 15 },
+    shard: { model: 'icicle', hp: 10, r: 1.0, d: 1.0, sc: 1.2, scrap: 1, hitY: -1.8 },
+    cage: { model: 'cage', hp: 60, r: 1.7, d: 1.4, sc: 1, scrap: 10 },
+    pump: { model: 'pump', hp: 75, col: [{ x: 0, y: 2, w: 1.6, h: 2 }], d: 1.6, scrap: 12 },
+    acedart: { model: 'acedart', hp: 70, r: 2, d: 1.3, sc: 1.2, scrap: 14, ry: Math.PI, cache: 0.15 },
   };
 
   const WEAPON_COL = { pulse: '#7fe4ff', repeater: '#8dffa8', scatter: '#ffb347', rail: '#d6a8ff' };
@@ -134,6 +205,9 @@
       this.gust = 0;
       this.nextGust = 14;
       this.lowHullWarned = false;
+      this.timers = [];
+      // Escort missions: a friendly carrier flies ahead and the raiders shoot at it.
+      this.friend = this.th.escort ? { x: 0, y: 4, z: 34, hp: 700, max: 700, fireCD: 2, t: 0, flash: 0, dead: false, warned: false } : null;
       this.view = { F, cx: G.W / 2, cy: G.H * 0.47, camX: 0, camY: 1.6, fogColor: U.hex(this.th.fog), fogStart: this.th.fogStart, fogEnd: FAR };
       this.camRoll = 0;
       this.reticle = null;
@@ -172,6 +246,8 @@
     }
 
     initDecor() {
+      this.flakes = [];
+      if (this.th.snow || this.th.embers) for (let i = 0; i < 170; i++) this.flakes.push(this.newFlake(U.rand(2, FAR)));
       this.stars = [];
       this.clouds = [];
       this.rain = [];
@@ -184,6 +260,9 @@
       if (this.th.rain) {
         for (let i = 0; i < 90; i++) this.rain.push({ x: U.rand(0, G.W), y: U.rand(0, G.H), s: U.rand(0.6, 1.2) });
       }
+    }
+    newFlake(z) {
+      return { x: U.rand(-45, 45), y: U.rand(-7, 20), z: z === undefined ? FAR : z, s: U.rand(0.6, 1.3) };
     }
     newCloud(z) {
       let x, y;
@@ -345,6 +424,11 @@
         this.add({ type: 'pickup', kind: 'scrap', x: e.x + U.rand(-1, 1), y: e.y + (e.hitY || 0) + U.rand(-1, 1), z: e.z + U.rand(-1, 1), vz: -this.S * 0.5, vx: U.rand(-3, 3), vy: U.rand(-3, 3), value: (e.scrapV / n), auto: true, r: 0.5 });
       }
       if (Math.random() < (e.cacheChance || 0)) this.add({ type: 'pickup', kind: 'cache', x: e.x, y: e.y + (e.hitY || 0), z: e.z, vz: -this.S * 0.6, auto: true, r: 0.8 });
+      if (e.kind === 'cage') {
+        const sp = R.project(this.view, e.x, e.y + 2, e.z);
+        if (sp) G.popups.add(sp.x, sp.y, 'PILOT RESCUED', '#6fe39a', 16, 1.2);
+        for (let i = 0; i < 6; i++) this.parts.push({ x: e.x, y: e.y, z: e.z, vx: U.rand(-3, 3), vy: 10 + i * 2, vz: -this.S * 0.4, life: 0.8, max: 0.8, size: 0.6, col: '#6fe39a', glow: true, drag: 0.97 });
+      }
       if (e.bonus) this.bonusHit(e);
       if (e.bossPart) this.bossPartDown(e);
     }
@@ -363,6 +447,9 @@
           calmring: `Nice line. ${left} more ring${left > 1 ? 's' : ''}.`,
           conduit: `Conduit burning. ${left} more.`,
           frigate: `Frigate down! ${left} left.`,
+          cage: `Pilot free! ${left} more cage${left > 1 ? 's' : ''}.`,
+          pump: `Pump destroyed. ${left} to go.`,
+          acewing: `Ace down! ${left} more of her wingmen.`,
         };
         G.radio.say(this.th.bonusKind === 'calmring' ? 'juno' : 'juno', lines[this.th.bonusKind] || 'Target hit.', 2.4, true);
       }
@@ -420,6 +507,15 @@
       this.updateEnemyBullets(dt);
       this.updateParts(dt);
       if (this.boss) this.updateBoss(dt);
+      if (this.friend) this.updateFriend(dt);
+      for (const tm of this.timers) {
+        tm.t -= dt;
+        if (tm.t <= 0 && !tm.done && this.phase !== 'dead') {
+          tm.done = true;
+          tm.fn();
+        }
+      }
+      this.timers = this.timers.filter((tm) => !tm.done);
 
       // Camera follows the ship loosely and rolls with it.
       V.camX = U.damp(V.camX, p.x * 0.7, 6, dt);
@@ -486,6 +582,13 @@
     }
 
     updateWeather(dt) {
+      for (let i = 0; i < this.flakes.length; i++) {
+        const f = this.flakes[i];
+        f.z -= this.S * dt;
+        f.y += (this.th.snow ? -2.4 : 3.2) * f.s * dt;
+        if (this.th.snow) f.x -= 1.5 * dt;
+        if (f.z < 1 || f.y < GROUND || f.y > 24) this.flakes[i] = this.newFlake();
+      }
       if (this.th.rain) {
         this.nextFlash -= dt;
         if (this.nextFlash <= 0) {
@@ -549,6 +652,15 @@
       } else if (k === 'conduit') {
         const side = i % 2 ? 1 : -1;
         this.enemy('conduit', side * 12.5, U.rand(2, 5), FAR, { bonus: true, ai: 'static', countKill: false, cacheChance: 0 });
+      } else if (k === 'cage') {
+        this.enemy('cage', U.rand(-7, 7), U.rand(-2, 5), FAR, { bonus: true, ai: 'cage', countKill: false, cacheChance: 0, ph: U.rand(0, 6) });
+        G.radio.say('juno', 'Ice cage ahead! There is one of ours inside!', 2.2);
+      } else if (k === 'pump') {
+        this.enemy('pump', U.rand(-10, 10), GROUND, FAR, { bonus: true, ai: 'static', countKill: false, cacheChance: 0 });
+        if (i === 0) G.radio.say('juno', 'Magma pump on the flats. Light it up!', 2.2);
+      } else if (k === 'acewing') {
+        for (let j = 0; j < 2; j++) this.enemy('acedart', (j ? 1 : -1) * U.rand(4, 9), U.rand(0, 5), FAR + j * 6, { bonus: true, ai: 'acewing', vz: -40, side: j ? 1 : -1 });
+        if (i === 0) G.radio.say('veyra', 'My squadron will soften you up first. Try to keep up.', 2.8);
       } else if (k === 'frigate') {
         const side = i % 2 ? 1 : -1;
         this.enemy('frigate', side * 16, U.rand(1, 5), FAR, { bonus: true, ai: 'frigate', side, countKill: false });
@@ -579,7 +691,7 @@
         e.y += e.vy * dt;
         const oz = e.z;
         e.z += e.vz * dt;
-        if (e.z < -6 || e.z > FAR + 60 || Math.abs(e.x) > 120 || e.y > 80) e.dead = true;
+        if (!e.bossPart && (e.z < -6 || e.z > FAR + 60 || Math.abs(e.x) > 120 || e.y > 80)) e.dead = true;
 
         // Interactions as the thing passes the ship's depth.
         if (this.phase === 'dead' || this.phase === 'outro') continue;
@@ -813,6 +925,16 @@
         b.y += b.vy * dt;
         b.z += b.vz * dt;
         b.life -= dt;
+        if (b.grav) b.vy -= b.grav * dt;
+        if (b.toFriend) {
+          const fr = this.friend;
+          if (!fr || fr.dead || b.z < fr.z - 8) b.dead = true;
+          else if (Math.abs(b.z - fr.z) < 7 && Math.abs(b.x - fr.x) < 3.4 && Math.abs(b.y - fr.y) < 1.9) {
+            b.dead = true;
+            this.hurtFriend(b.dmg);
+          }
+          continue;
+        }
         if (this.phase === 'dead' || this.phase === 'outro') continue;
         if (oz >= PZ - 0.6 && b.z <= PZ + 0.6) {
           if (Math.hypot(b.x - p.x, b.y - p.y) < 0.9 + b.r * 0.5) {
@@ -852,14 +974,14 @@
       const def = BOSSES[this.th.boss];
       const mul = 1 + (this.m.stage - 1) * 0.08;
       this.phase = 'boss';
-      const B = (this.boss = { def, x: 0, y: def.y, z: FAR + 20, t: 0, state: 'enter', parts: [], core: null, deathT: 0 });
-      B.body = this.add({ type: 'bossbody', model: MD[def.body], x: 0, y: def.y, z: B.z, vz: 0, ry: Math.PI, col: def.bodyCol, d: 4, ai: null });
+      const B = (this.boss = { def, x: 0, y: def.y, z: FAR + 20, t: 0, state: 'enter', parts: [], core: null, deathT: 0, yOff: def.rise || 0 });
+      B.body = def.body ? this.add({ type: 'bossbody', model: MD[def.body], x: 0, y: def.y, z: B.z, vz: 0, ry: Math.PI, col: def.bodyCol, d: 4, ai: null }) : null;
       for (const pd of def.parts) {
         const e = this.add({ type: 'enemy', kind: 'bosspart', model: MD[pd.model], x: 0, y: 0, z: B.z, vz: 0, ry: Math.PI, hp: Math.round(pd.hp * mul), r: pd.r, d: 2.2, hitY: pd.hitY || 0, bossPart: true, pd, fireCD: (pd.fire.delay || 0) + 3, ai: null, cacheChance: 0.3, scrapV: 20, sc: 1 });
         B.parts.push(e);
       }
       const cd = def.core;
-      B.core = this.add({ type: 'enemy', kind: 'bosscore', model: MD[cd.model], x: 0, y: 0, z: B.z, vz: 0, ry: Math.PI, hp: Math.round(cd.hp * mul), r: cd.r, d: 2.2, bossPart: true, isCore: true, pd: cd, shielded: true, fireCD: 4, fire2CD: 6, ai: null, cacheChance: 1, scrapV: 60, sc: 1 });
+      B.core = this.add({ type: 'enemy', kind: 'bosscore', model: MD[cd.model], x: 0, y: 0, z: B.z, vz: 0, ry: Math.PI, hp: Math.round(cd.hp * mul), r: cd.r, d: 2.2, bossPart: true, isCore: true, pd: cd, shielded: def.parts.length > 0, fireCD: 4, fire2CD: 6, ai: null, cacheChance: 1, scrapV: 60, sc: 1 });
       B.maxHp = B.parts.reduce((s, e) => s + e.maxHp, 0) + B.core.maxHp;
       G.audio.music('boss');
       G.audio.play('alarm');
@@ -874,11 +996,23 @@
         B.z = U.damp(B.z, def.z, 1.4, dt);
         if (B.z < def.z + 2) B.state = 'fight';
       }
-      if (B.state === 'fight' || B.state === 'enter') {
+      B.yOff = U.damp(B.yOff, 0, 1.1, dt);
+      if (def.custom === 'ace') this.aceMove(B, dt);
+      else if (B.state === 'fight' || B.state === 'enter') {
         B.x = Math.sin(B.t * def.swaySp[0]) * def.sway[0];
-        B.y = def.y + Math.sin(B.t * def.swaySp[1]) * def.sway[1];
+        B.y = def.y + Math.sin(B.t * def.swaySp[1]) * def.sway[1] + B.yOff;
       }
       const place = (e, pd) => {
+        if (pd.spin) e.rz += pd.spin * dt;
+        if (pd.trail !== undefined) {
+          // Segments follow the head along the same wave, a little later in time.
+          const tt = B.t - pd.trail * 0.34;
+          e.x = B.x + Math.sin(tt * 0.9) * 8;
+          e.y = B.y + Math.sin(tt * 1.6) * 2.4;
+          e.z = B.z + pd.trail * 3.2;
+          e.rz = tt * 1.5;
+          return;
+        }
         let ox = pd.off[0], oy = pd.off[1];
         if (pd.orbit) {
           const a = pd.orbit.ph + B.t * pd.orbit.sp;
@@ -889,17 +1023,19 @@
         e.y = B.y + oy;
         e.z = B.z + pd.off[2] * -1 + 0;
       };
-      B.body.x = B.x;
-      B.body.y = B.y;
-      B.body.z = B.z;
-      if (def.body === 'tempestBody') B.body.ry += dt * 0.4;
+      if (B.body) {
+        B.body.x = B.x;
+        B.body.y = B.y;
+        B.body.z = B.z;
+        if (def.body === 'tempestBody') B.body.ry += dt * 0.4;
+      }
       for (const e of B.parts) if (!e.dead) place(e, e.pd);
       if (!B.core.dead) place(B.core, B.core.pd);
 
       if (B.state === 'fight' && this.phase !== 'dead') {
         for (const e of B.parts) if (!e.dead) this.bossFire(e, e.pd.fire, dt, 'fireCD');
         if (!B.core.dead) {
-          this.bossFire(B.core, B.core.pd.fire, dt, 'fireCD', B.core.shielded ? 1.6 : 1);
+          this.bossFire(B.core, B.core.pd.fire, dt, 'fireCD', B.core.shielded ? 1.6 : B.enrage ? 0.65 : 1);
           if (B.core.pd.fire2 && !B.core.shielded) this.bossFire(B.core, B.core.pd.fire2, dt, 'fire2CD');
         }
       }
@@ -907,13 +1043,13 @@
         B.deathT += dt;
         if (Math.random() < 0.35) this.explosion(B.x + U.rand(-10, 10), B.y + U.rand(-4, 4), B.z + U.rand(-3, 3), U.rand(1.5, 3), '#ffb347');
         if (Math.random() < 0.1) G.audio.play('boom');
-        B.body.y -= dt * B.deathT * 2;
+        if (B.body) B.body.y -= dt * B.deathT * 2;
         if (B.deathT > 2.4) {
           this.explosion(B.x, B.y, B.z, 7, '#fff2c0');
           G.audio.play('bigboom');
           G.shake(20);
           this.flashT = 0.5;
-          B.body.dead = true;
+          if (B.body) B.body.dead = true;
           this.boss = null;
           this.phase = 'outro';
           this.phaseT = 0;
@@ -921,6 +1057,130 @@
           G.radio.say('harrow', 'Target destroyed! Outstanding, Wingbreaker. Bring it home.', 3, true);
         }
       }
+    }
+
+    // The rival ace weaves hard and periodically dives straight past the player.
+    aceMove(B, dt) {
+      const def = B.def;
+      const c = B.core;
+      const t = B.t;
+      B.x = Math.sin(t * 0.85) * 8 + Math.sin(t * 2.2) * 2.5;
+      B.y = def.y + Math.sin(t * 1.2) * 3.2;
+      if (B.state !== 'fight') return;
+      B.passT = (B.passT || 0) + dt;
+      if (!B.pass && B.passT > 7.5) {
+        B.pass = 'in';
+        B.passT = 0;
+        B.side = U.chance(0.5) ? 3.5 : -3.5;
+        G.radio.say('veyra', U.pick(['Too slow!', 'Watch your back, Wingbreaker.', 'Here I come!', 'Catch me if you can.']), 2, true);
+        G.audio.play('alarm');
+      }
+      if (B.pass === 'in') {
+        B.z -= 62 * dt;
+        B.x = U.lerp(B.x, this.p.x + B.side, U.clamp(1 - (B.z - PZ) / 30, 0, 1));
+        if (!B.whoosh && B.z < PZ + 2) {
+          B.whoosh = true;
+          G.audio.play('dodge');
+          G.shake(6);
+        }
+        if (B.z < -8) {
+          B.pass = 'back';
+          B.whoosh = false;
+          B.z = FAR - 20;
+        }
+      } else if (B.pass === 'back') {
+        B.z = U.damp(B.z, def.z, 1.5, dt);
+        if (B.z < def.z + 2) {
+          B.pass = null;
+          B.passT = 0;
+        }
+      }
+      if (c && !c.dead) {
+        c.rz = Math.sin(t * 1.7) * 0.7 + (B.pass === 'in' ? t * 7 : 0);
+        c.rx = 0.38;
+        c.sc = 1.5;
+      }
+      const f = c.hp / c.maxHp;
+      const callWing = (n, line) => {
+        for (let i = 0; i < n; i++) this.enemy('acedart', (i % 2 ? 1 : -1) * U.rand(5, 9), U.rand(0, 5), FAR - 30 + i * 5, { ai: 'acewing', vz: -40, side: i % 2 ? 1 : -1 });
+        G.radio.say('veyra', line, 2.6, true);
+      };
+      if (!B.ph1 && f < 0.66) {
+        B.ph1 = true;
+        callWing(2, 'Wings, to me! Box him in!');
+      }
+      if (!B.ph2 && f < 0.33) {
+        B.ph2 = true;
+        B.enrage = true;
+        callWing(3, 'No. Not like this. Everyone, on him!');
+      }
+    }
+
+    shootFriend(x, y, z, speed = 30) {
+      const fr = this.friend;
+      if (!fr || fr.dead || z - fr.z < 4) return this.shoot(x, y, z, speed);
+      const t = (z - fr.z) / speed;
+      const tx = fr.x + U.rand(-1.5, 1.5), ty = fr.y + U.rand(-0.6, 0.6);
+      this.eb.push({ x, y, z, vx: (tx - x) / t, vy: (ty - y) / t, vz: -speed, r: 0.6, dmg: 9 + this.m.stage, col: '#ff9b3d', life: 6, toFriend: true });
+      G.audio.play('enemyShot');
+    }
+
+    hurtFriend(d) {
+      const fr = this.friend;
+      if (!fr || fr.dead) return;
+      fr.hp -= d;
+      fr.flash = 0.1;
+      this.spark(fr.x + U.rand(-2, 2), fr.y, fr.z - 7, '#ff9b3d');
+      if (!fr.warned && fr.hp < fr.max * 0.5) {
+        fr.warned = true;
+        G.radio.say('lantern', 'Hull below half! We cannot take much more of this!', 3, true);
+      }
+      if (fr.hp <= 0) {
+        fr.dead = true;
+        fr.hp = 0;
+        for (let i = 0; i < 5; i++) this.explosion(fr.x + U.rand(-3, 3), fr.y + U.rand(-1, 1), fr.z + U.rand(-6, 6), 2.5, '#ffb347');
+        G.audio.play('bigboom');
+        G.shake(14);
+        G.radio.say('harrow', 'We lost the Lantern... Finish the fight, Wingbreaker. Make it count.', 3.6, true);
+      }
+    }
+
+    updateFriend(dt) {
+      const fr = this.friend;
+      if (fr.dead) return;
+      fr.t += dt;
+      fr.flash = Math.max(0, fr.flash - dt);
+      // During the boss fight it pulls up and aside so the player can see the target.
+      const bx = this.boss ? -10 + Math.sin(fr.t * 0.3) * 1.5 : Math.sin(fr.t * 0.3) * 4;
+      const by = this.boss ? 7 : 4 + Math.sin(fr.t * 0.5) * 0.8;
+      fr.x = U.damp(fr.x, bx, 1.2, dt);
+      fr.y = U.damp(fr.y, by, 1.2, dt);
+      // Covering fire at the nearest enemy beyond it.
+      fr.fireCD -= dt;
+      if (fr.fireCD <= 0 && this.phase !== 'outro') {
+        fr.fireCD = 1.1;
+        let best = null, bd = 1e9;
+        for (const e of this.ents) {
+          if (e.type !== 'enemy' || e.hp <= 0 || e.shielded || e.z < fr.z + 8 || e.z > FAR - 20) continue;
+          const d = e.z + Math.abs(e.x - fr.x) * 3;
+          if (d < bd) { bd = d; best = e; }
+        }
+        if (best) {
+          const ox = fr.x + (Math.random() < 0.5 ? 2.2 : -2.2), oy = fr.y + 1, oz = fr.z + 8;
+          const dz = best.z - oz;
+          const by = best.y + (best.hitY || 0) + (best.col ? best.col[0].y : 0);
+          this.bolts.push({ x: ox, y: oy, z: oz, vx: ((best.x - ox) / dz) * 140, vy: ((by - oy) / dz) * 140, vz: 140, dmg: 9, pierce: 0, col: '#9fe6b4', life: 1.2, r: 0.5, kind: 'bolt', chained: true });
+        }
+      }
+    }
+
+    // A lava bomb lobbed in an arc to land where the player will be.
+    lob(x, y, z, tx, ty) {
+      const speed = 30, dz = z - PZ;
+      if (dz < 6) return;
+      const t = dz / speed, g = 18;
+      this.eb.push({ x, y, z, vx: (tx - x) / t, vy: (ty - y + 0.5 * g * t * t) / t, vz: -speed, grav: g, r: 0.95, dmg: 12 * (0.85 + this.m.stage * 0.08), col: '#ff6a2a', life: 6 });
+      this.spark(x, y, z, '#ff6a2a');
     }
 
     bossFire(e, f, dt, key, slow = 1) {
@@ -952,6 +1212,15 @@
       } else if (f.kind === 'lightning') {
         for (let i = 0; i < 3; i++) this.add({ type: 'hazard', kind: 'strike', x: U.clamp(p.x + U.rand(-5, 5), -BX, BX), y: 0, z: PZ + this.S * 1.3 + i * 6, ai: 'strike' });
         G.audio.play('alarm');
+      } else if (f.kind === 'shards') {
+        for (let i = 0; i < 3; i++) this.enemy('shard', U.clamp(p.x + U.rand(-4, 4), -BX, BX), 16, PZ + 30 + i * 7, { ai: 'shard', countKill: false, scrapV: 0, cacheChance: 0 });
+        G.audio.play('alarm');
+      } else if (f.kind === 'lavabombs') {
+        for (let i = 0; i < 3; i++) this.timers.push({ t: i * 0.3, fn: () => !e.dead && this.lob(e.x, e.y, e.z - 2, p.x + U.rand(-3, 3), p.y + U.rand(-2, 2)) });
+        G.audio.play('grenade');
+      } else if (f.kind === 'launch') {
+        for (let i = 0; i < f.n; i++) this.enemy('dart', x + U.rand(-1.5, 1.5), y, z - 2, { ai: this.friend ? 'raider' : 'dart', hold: true, holdZ: U.rand(40, 56), amp: 3, freq: 1.5, ph: U.rand(0, 6), vz: -18 });
+        G.audio.play('missile');
       } else if (f.kind === 'sweep') {
         const yb = U.clamp(p.y + U.rand(-1, 1), BYMIN + 0.5, BYMAX - 0.5);
         this.add({ type: 'laser', beams: [{ y: yb }], z: e.z - 2, vz: -24, span: 22 });
@@ -978,6 +1247,7 @@
 
     finish(success) {
       if (this.result) return;
+      if (this.friend) this.bonusDone = !this.friend.dead && this.friend.hp >= this.friend.max * 0.5;
       this.result = G.makeResult({
         success,
         bonus: this.bonusDone,
@@ -1009,6 +1279,7 @@
       for (const q of this.parts) list.push([q.z, 3, q]);
       for (const c of this.clouds) list.push([c.z, 4, c]);
       if (this.phase !== 'dead') list.push([this.p.z, 5, this.p]);
+      if (this.friend && !this.friend.dead) list.push([this.friend.z, 6, this.friend]);
       list.sort((a, b) => b[0] - a[0]);
       for (const it of list) {
         const o = it[2];
@@ -1019,6 +1290,7 @@
           case 3: this.drawPart(ctx, o); break;
           case 4: this.drawCloud(ctx, o); break;
           case 5: this.drawShip(ctx); break;
+          case 6: this.drawFriend(ctx, o); break;
         }
       }
       for (const a of this.arcs) {
@@ -1065,7 +1337,7 @@
       ctx.fillRect(-pad, -pad, G.W + pad * 2, G.H + pad * 2);
       if (th.sun) {
         const sx = G.W * 0.68 - V.camX * 3, sy = V.cy - 70;
-        G.drawGlow(ctx, '#ffb070', sx, sy, 160, 0.6);
+        G.drawGlow(ctx, th.sunGlow || '#ffb070', sx, sy, 160, 0.6);
         ctx.fillStyle = th.sun;
         ctx.beginPath();
         ctx.arc(sx, sy, 34, 0, Math.PI * 2);
@@ -1093,6 +1365,28 @@
         ctx.ellipse(px, py, 200, 36, -0.25, 0, Math.PI);
         ctx.stroke();
       }
+      if (th.nebula) {
+        G.drawGlow(ctx, '#2fd8c0', G.W * 0.25 - V.camX * 2, V.cy - 90, 330, 0.35);
+        G.drawGlow(ctx, '#c77dff', G.W * 0.8 - V.camX * 2.5, V.cy - 30, 280, 0.3);
+        G.drawGlow(ctx, '#5fd4ff', G.W * 0.55 - V.camX * 1.5, V.cy + 120, 380, 0.2);
+      }
+      if (th.planetBelow) {
+        const R0 = 1500, px = G.W / 2 - V.camX * 1.6, py = V.cy + 150 + R0 - V.camY * 5;
+        G.drawGlow(ctx, '#5fa8ff', px, py - R0, 420, 0.4);
+        const g = ctx.createRadialGradient(px - 300, py - R0, 50, px, py, R0);
+        g.addColorStop(0, '#6fb8e8');
+        g.addColorStop(0.35, '#2a6aa8');
+        g.addColorStop(1, '#0a1a3a');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(px, py, R0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(150,210,255,0.55)';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(px, py, R0 + 3, Math.PI * 1.1, Math.PI * 1.9);
+        ctx.stroke();
+      }
       if (th.stars) {
         ctx.fillStyle = '#ffffff';
         for (const s of this.stars) {
@@ -1111,6 +1405,7 @@
       if (th.corridor) this.drawCorridor(ctx);
       else if (th.ground) this.drawGround(ctx, th.groundY || GROUND);
       if (th.walls) this.drawWalls(ctx);
+      if (this.flakes.length) this.drawFlakes(ctx);
     }
 
     fogCol(c, z) {
@@ -1135,7 +1430,12 @@
         const zn = Math.max(1.2, z);
         const y = V.cy - (gy - V.camY) * V.F / zn;
         const idx = Math.floor((this.dist + prevZ - 0.01) / BAND) % 2;
-        ctx.fillStyle = this.fogCol(cols[idx], prevZ);
+        let bc = cols[idx];
+        if (this.th.lava) {
+          const bi = Math.floor((this.dist + prevZ - 0.01) / BAND);
+          if (((bi * 2654435761) >>> 0) % 4 === 0) bc = U.mix([216, 70, 26], [255, 170, 60], 0.5 + Math.sin(this.t * 3 + bi) * 0.5);
+        }
+        ctx.fillStyle = this.fogCol(bc, prevZ);
         ctx.fillRect(-pad, prevY, G.W + pad * 2, Math.min(G.H + pad, y) - prevY + 1);
         prevY = y;
         prevZ = zn;
@@ -1174,7 +1474,7 @@
     drawWalls(ctx) {
       const V = this.view;
       const STEP = 6;
-      const cols = [U.hex('#8a4a30'), U.hex('#9c5737'), U.hex('#7a3f2a')];
+      const cols = (this.th.wallCols || ['#8a4a30', '#9c5737', '#7a3f2a']).map(U.hex);
       const off = this.dist % STEP;
       for (const side of [-1, 1]) {
         let z = FAR - ((FAR + off) % STEP);
@@ -1290,6 +1590,33 @@
     drawEnt(ctx, e) {
       const V = this.view;
       if (e.z < R.NEAR + 0.2) return;
+      if (e.kind === 'shard' && e.hp > 0) {
+        const g = R.project(V, e.x, GROUND, e.z);
+        if (g) {
+          const k = U.clamp(1 - (e.y - GROUND) / 24, 0.2, 1);
+          ctx.fillStyle = `rgba(20,40,70,${0.25 + k * 0.35})`;
+          ctx.beginPath();
+          ctx.ellipse(g.x, g.y, 1.6 * g.s * (0.6 + k * 0.6), 0.5 * g.s * (0.6 + k * 0.6), 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      if (e.type === 'hazard' && e.kind === 'geyser') {
+        const g = R.project(V, e.x, GROUND, e.z);
+        if (!g) return;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        if (!e.erupt) {
+          const pulse = 0.4 + Math.sin(this.t * 14) * 0.25;
+          G.drawGlow(ctx, '#ff6a2a', g.x, g.y, 2.4 * g.s, pulse);
+        } else {
+          for (let yy = GROUND; yy < 13; yy += 1.4) {
+            const c = R.project(V, e.x + U.rand(-0.3, 0.3), yy, e.z);
+            if (c) G.drawGlow(ctx, yy > 6 ? '#ff6a2a' : '#ffb347', c.x, c.y, (2.2 - (yy - GROUND) * 0.06) * c.s, 0.9);
+          }
+        }
+        ctx.restore();
+        return;
+      }
       if (e.type === 'ring') {
         if (e.z < PZ - 0.5) return;
         const sp = R.project(V, e.x, e.y, e.z);
@@ -1430,6 +1757,18 @@
           ctx.restore();
         }
       }
+      if (e.ai === 'raider' && e.hp > 0 && this.friend && !this.friend.dead && e.z < FAR - 5) {
+        const top = R.project(V, e.x, e.y + 2.2, e.z);
+        if (top) {
+          ctx.strokeStyle = '#ff9b3d';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(top.x - 7, top.y - 8);
+          ctx.lineTo(top.x, top.y);
+          ctx.lineTo(top.x + 7, top.y - 8);
+          ctx.stroke();
+        }
+      }
       if (e.bonus && e.hp > 0 && e.z < FAR - 5) {
         const top = R.project(V, e.x, e.y + (e.col ? e.col[0].y + e.col[0].h : 2) + 1.5, e.z);
         if (top) {
@@ -1472,6 +1811,36 @@
           ctx.restore();
         }
       }
+    }
+
+    drawFriend(ctx, fr) {
+      const V = this.view;
+      R.drawModel(ctx, V, MD.lantern, fr.x, fr.y, fr.z, 0, 0, Math.sin(fr.t * 0.4) * 0.06, 0.85, { flash: fr.flash > 0 ? 0.5 : 0 });
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for (const s of [-2.9, 2.9, 0]) {
+        const g = R.project(V, fr.x + s, fr.y, fr.z - 6.9);
+        if (g) G.drawGlow(ctx, '#5fd4ff', g.x, g.y, (s ? 0.9 : 1.2) * g.s * (0.9 + Math.random() * 0.15), 0.9);
+      }
+      ctx.restore();
+    }
+
+    drawFlakes(ctx) {
+      const V = this.view;
+      const snow = this.th.snow;
+      ctx.save();
+      if (!snow) ctx.globalCompositeOperation = 'lighter';
+      for (const f of this.flakes) {
+        const a = R.project(V, f.x, f.y, f.z);
+        if (!a) continue;
+        const sz = Math.max(1, 0.09 * a.s * f.s);
+        const al = U.clamp(1 - f.z / FAR, 0.1, 0.9);
+        if (snow) {
+          ctx.fillStyle = `rgba(255,255,255,${al})`;
+          ctx.fillRect(a.x - sz / 2, a.y - sz / 2, sz, sz);
+        } else G.drawGlow(ctx, '#ff8a3d', a.x, a.y, sz * 2.2, al);
+      }
+      ctx.restore();
     }
 
     drawBolt(ctx, b) {
@@ -1567,13 +1936,24 @@
           }
         }
         // Behind-you warning
-        const behind = this.ents.some((e) => e.ai === 'chaser' && e.z < PZ && e.hp > 0);
+        const behind = this.ents.some((e) => e.ai === 'chaser' && e.z < PZ && e.hp > 0) || (this.boss && this.boss.pass === 'in' && this.boss.z < PZ + 4);
         if (behind) G.text(ctx, '▼ BEHIND YOU ▼', G.W / 2, G.H - 30, { size: 16, align: 'center', color: Math.floor(this.t * 6) % 2 ? '#ff6b5e' : '#ffffff' });
         ctx.restore();
       }
       G.hud.vitals(ctx, this.v);
       G.hud.scoreBox(ctx, this.scrap, `KILLS ${this.kills}` + (this.caches ? `  ·  CACHES ${this.caches}` : ''));
-      if (this.m.bonus) G.hud.objective(ctx, this.m.bonus.text, Math.min(this.bonusCount, this.bonusNeed), this.bonusNeed, this.bonusDone);
+      if (this.friend) {
+        const fr = this.friend;
+        const f = fr.hp / fr.max;
+        const ok = f >= 0.5 && !fr.dead;
+        G.text(ctx, 'BONUS', G.W / 2, 20, { size: 10, align: 'center', color: ok ? '#ffd37a' : '#ff6b5e', outline: false });
+        G.text(ctx, fr.dead ? 'The Lantern is lost' : `Keep the Lantern above 50%  ·  ${Math.round(f * 100)}%`, G.W / 2, 38, { size: 14, align: 'center', color: ok ? '#ffffff' : '#ff8a8a' });
+        if (!this.boss) {
+          G.hud.bar(ctx, G.W / 2 - 110, 46, 220, 5, f, ok ? '#9fe6b4' : '#ff6b5e', 'rgba(159,230,180,0.12)');
+          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.fillRect(G.W / 2 - 1, 44, 2, 9);
+        }
+      } else if (this.m.bonus) G.hud.objective(ctx, this.m.bonus.text, Math.min(this.bonusCount, this.bonusNeed), this.bonusNeed, this.bonusDone);
       if (this.boss && this.boss.state !== 'enter') {
         const B = this.boss;
         const hp = B.parts.reduce((s, e) => s + Math.max(0, e.hp), 0) + Math.max(0, B.core.hp);
@@ -1819,7 +2199,7 @@
         const n = U.randi(3, diff > 0.5 ? 6 : 4);
         for (let i = 0; i < n; i++) {
           const x = U.rand(-11, 11);
-          f.add({ type: 'obstacle', model: U.pick(MD.rocks), x, y: GROUND, z: FAR + i * 9, col: [{ x: 0, y: 8, w: 1.7, h: 8 }], d: 2, ry: U.rand(0, 6) });
+          f.add({ type: 'obstacle', model: U.pick(f.th.rockSet ? MD[f.th.rockSet] : MD.rocks), x, y: GROUND, z: FAR + i * 9, col: [{ x: 0, y: 8, w: 1.7, h: 8 }], d: 2, ry: U.rand(0, 6) });
         }
       },
     },
@@ -1839,7 +2219,7 @@
         const L = -32, Rr = 32, B = GROUND, T = f.th.corridor ? CEIL : 22;
         const metal = !!f.th.corridor;
         const mb = new R.MB();
-        const col = metal ? '#3d4554' : '#8a4a30';
+        const col = metal ? '#3d4554' : f.th.wallSolid || '#8a4a30';
         const parts = [
           [L, B, gx - hw, T], [gx + hw, B, Rr, T], [gx - hw, gy + hh, gx + hw, T], [gx - hw, B, gx + hw, gy - hh],
         ];
@@ -1914,11 +2294,111 @@
         for (let i = 0; i < 4; i++) f.add({ type: 'ring', x: x0 + Math.sin(i * 0.8) * 4, y: y0 + Math.cos(i * 0.8) * 1.5, z: FAR + i * 10, rad: 2.6 });
       },
     },
+    icefall: {
+      gap: 3.2, solid: true,
+      fn(f, diff) {
+        const n = U.randi(3, diff > 0.5 ? 6 : 4);
+        for (let i = 0; i < n; i++) f.enemy('shard', U.rand(-10, 10), 16, FAR + i * 10, { ai: 'shard', countKill: false, cacheChance: 0 });
+      },
+    },
+    geysers: {
+      gap: 3.2, solid: true,
+      fn(f, diff) {
+        const n = U.randi(2, diff > 0.5 ? 4 : 3);
+        for (let i = 0; i < n; i++) f.add({ type: 'hazard', kind: 'geyser', x: U.rand(-10, 10), y: GROUND, z: FAR + i * 15, ai: 'geyser' });
+      },
+    },
+    lavabombs: {
+      gap: 3.4,
+      fn(f) {
+        for (let i = 0; i < 4; i++) {
+          f.timers.push({ t: i * 0.45, fn: () => {
+            const p = f.p;
+            f.lob(U.rand(-12, 12), GROUND, U.rand(70, 95), p.x + U.rand(-3, 3), p.y + U.rand(-2, 2));
+            G.audio.play('grenade');
+          } });
+        }
+      },
+    },
+    raiders: {
+      gap: 4,
+      fn(f) {
+        const n = U.randi(2, 4);
+        for (let i = 0; i < n; i++) f.enemy('dart', U.rand(-9, 9), U.rand(0, 7), FAR + i * 6, { ai: 'raider', holdZ: U.rand(46, 64), amp: 3, freq: 1.3, ph: i, vz: -30 });
+        if (Math.random() < 0.35) G.radio.say('lantern', U.pick(['Raiders closing on us!', 'More of them, coming in high!', 'They are lining up on our engines!']), 2.2);
+      },
+    },
   };
   AI.rock = function (f, e, dt) {
     e.vz = -f.S;
     e.rx += e.spin[0] * dt;
     e.ry += e.spin[1] * dt;
+  };
+
+  AI.shard = function (f, e, dt) {
+    e.vz = -f.S;
+    if (!e.falling && e.z < PZ + 26) {
+      e.falling = true;
+      e.vy = -3;
+    }
+    if (e.falling) e.vy -= 34 * dt;
+    if (e.y < GROUND + 2.5) {
+      e.dead = true;
+      f.spark(e.x, GROUND + 1, e.z, '#dff3ff');
+      f.spark(e.x, GROUND + 1, e.z, '#9cc3df');
+    }
+  };
+  AI.cage = function (f, e, dt) {
+    e.vz = -f.S;
+    e.vy = Math.sin(e.t * 2 + e.ph) * 0.6;
+    e.ry += dt * 0.6;
+  };
+  AI.geyser = function (f, e) {
+    e.vz = -f.S;
+    if (!e.erupt && e.z < PZ + 16) {
+      e.erupt = true;
+      G.audio.play('missile');
+    }
+    const p = f.p;
+    if (e.erupt && !e.hitPlayer && Math.abs(e.z - PZ) < 1.6 && Math.abs(p.x - e.x) < 2 && f.phase !== 'dead') {
+      e.hitPlayer = true;
+      f.playerHit(26, 0.5);
+    }
+    if (e.erupt && Math.random() < 0.4) f.parts.push({ x: e.x + U.rand(-1, 1), y: U.rand(GROUND, 10), z: e.z, vx: U.rand(-2, 2), vy: U.rand(4, 10), vz: -f.S, life: 0.4, max: 0.4, size: 0.8, col: '#ffb347', glow: true, drag: 0.96 });
+  };
+  // Raiders hang back beyond the escort and shoot at it.
+  AI.raider = function (f, e, dt) {
+    if (e.z < e.holdZ && !e.left) {
+      e.vz = U.damp(e.vz, 0, 3, dt);
+      e.holdT = (e.holdT || 0) + dt;
+      if (e.holdT > 10) e.left = true;
+    } else if (e.left) e.vz = U.damp(e.vz, 40, 1.5, dt);
+    e.vx = Math.cos(e.t * e.freq + e.ph) * e.amp;
+    e.vy = Math.sin(e.t * e.freq * 0.7 + e.ph) * e.amp * 0.3;
+    e.rz = -e.vx * 0.05;
+    e.fireCD -= dt;
+    if (e.fireCD <= 0 && e.z > 22 && e.z < 100) {
+      if (f.friend && !f.friend.dead && Math.random() < 0.8) f.shootFriend(e.x, e.y, e.z, 30);
+      else f.shoot(e.x, e.y, e.z, 34);
+      e.fireCD = U.rand(1.6, 2.4) / f.diffMul;
+    }
+  };
+  AI.acewing = function (f, e, dt) {
+    if (!e.held && e.z > 46) e.vz = -40;
+    else {
+      e.held = true;
+      e.holdT = (e.holdT || 0) + dt;
+      e.vz = U.damp(e.vz, e.holdT > 9 ? 45 : 0, 2, dt);
+    }
+    e.vx = Math.cos(e.t * 1.4 + e.side) * 9;
+    e.vy = Math.sin(e.t * 1.9) * 3;
+    e.rz = Math.sin(e.t * 3) * 0.8 - e.vx * 0.03;
+    e.fireCD -= dt;
+    if (e.fireCD <= 0 && e.z > 20 && e.z < 90) {
+      f.shoot(e.x, e.y, e.z, 38);
+      f.timers.push({ t: 0.15, fn: () => !e.dead && f.shoot(e.x, e.y, e.z, 38) });
+      e.fireCD = U.rand(1.4, 2) / f.diffMul;
+    }
   };
 
   G.modes = G.modes || {};

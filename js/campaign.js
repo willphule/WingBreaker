@@ -23,6 +23,12 @@
       bonus: { type: 'courier', text: 'Wreck the courier before the gate' },
     },
     {
+      id: 'frost', stage: 2, lane: 'C', name: 'Frostline Rift', mode: 'flight', theme: 'frost', power: 17,
+      blurb: 'A frozen rift where the Crown keeps captured pilots on ice.',
+      brief: 'North of the canyon the rift freezes solid. The Crown has hung captured Meridian pilots in ice cages along the route, and the overhangs keep shedding icicles the size of towers. Shoot the cages open to free our people. Watch for shadows on the ice. They show where the icicles will land.',
+      bonus: { type: 'cages', count: 4, text: 'Free 4 captured pilots' },
+    },
+    {
       id: 'dock', stage: 3, lane: 'A', name: 'Halcyon Dock', mode: 'flight', theme: 'station', power: 27,
       blurb: 'Fly through the guts of the Crown\'s orbital shipyard.',
       brief: 'Halcyon Dock builds and refuels their carriers. Fly the service tunnels. Laser gates, girders, turrets in every wall. Its power conduits run along the tunnel. Burn four and the boarding crews can get aboard.',
@@ -33,6 +39,12 @@
       blurb: 'A high-speed tunnel run through the junk lines. Do not blink.',
       brief: 'The only way past the Dock\'s outer wall is the scrapline, a mag-rail tunnel where the Crown dumps wrecks. It gets faster the deeper you go. Jump, duck, switch lanes. Grab sixty power cells on the way and we can cut into the Dock\'s core.',
       bonus: { type: 'cells', count: 60, text: 'Collect 60 power cells' },
+    },
+    {
+      id: 'caldera', stage: 3, lane: 'C', name: 'Caldera Run', mode: 'flight', theme: 'lava', power: 26,
+      blurb: 'Skim a live volcano to cut the fuel lines feeding the Dock.',
+      brief: 'Halcyon Dock runs on geothermal fuel pumped out of the Ashfall caldera. Fly low over the lava. The vents erupt with very little warning, so watch for the glow. Destroy five magma pumps and the Dock runs dry. Something big lives in the lava. Try not to wake it.',
+      bonus: { type: 'pumps', count: 5, text: 'Destroy 5 magma pumps' },
     },
     {
       id: 'boarding', stage: 4, lane: 'A', name: 'Boarding Action', mode: 'foot', theme: 'interior', power: 36,
@@ -47,10 +59,22 @@
       bonus: { type: 'courier', text: 'Wreck the courier before the gate' },
     },
     {
+      id: 'lantern', stage: 4, lane: 'C', name: 'Lantern Escort', mode: 'flight', theme: 'nebula', power: 35,
+      blurb: 'Shield a crippled refugee carrier through the Veil nebula.',
+      brief: 'The carrier Lantern is limping home through the Veil nebula with two thousand civilians aboard, and Crown raiders are on its tail. Fly ahead of it, kill the raiders before they line up their shots, and keep its hull above half. The Lantern will give covering fire where it can.',
+      bonus: { type: 'escort', count: 1, text: 'Keep the Lantern above 50% hull' },
+    },
+    {
       id: 'crownfall', stage: 5, lane: 'C', name: 'Crownfall', mode: 'flight', theme: 'space', power: 45,
       blurb: 'The final strike on the Crown dreadnought.',
       brief: 'This is it. The dreadnought Hollow Crown is in open space with its escort frigates. Cut through the asteroid screen, sink the frigates if you can, and break the Crown for good.',
       bonus: { type: 'escorts', count: 3, text: 'Destroy 3 escort frigates' },
+    },
+    {
+      id: 'ace', stage: 6, lane: 'C', name: 'Ace of Crowns', mode: 'flight', theme: 'orbit', power: 50,
+      blurb: 'The Crown\'s best pilot survived. She wants a rematch.',
+      brief: 'Veyra Solace, the Crown\'s top ace, slipped away before the dreadnought fell. She is in high orbit over the Reach with her personal squadron, calling you out by name. Shoot down her gold-trimmed wingmen, then beat her one on one. She is faster than anything you have fought, and she likes to dive straight past you.',
+      bonus: { type: 'aces', count: 8, text: 'Shoot down 8 Crown aces' },
     },
   ];
 
@@ -83,7 +107,7 @@
   // Recommended next mission: the first available, uncleared one, preferring the upper route.
   C.suggested = function (save) {
     const order = M.slice().sort((a, b) => a.stage - b.stage || (a.lane === 'A' ? -1 : 1));
-    for (const m of order) if (C.available(save, m) && !save.progress.cleared[m.id]) return m;
+    for (const m of order) if (C.available(save, m) && !save.progress.cleared[m.id] && m.stage <= 5) return m;
     return C.byId('crownfall');
   };
   C.modeName = { flight: 'Flight', bike: 'Speeder Chase', foot: 'On Foot', gauntlet: 'Gauntlet' };

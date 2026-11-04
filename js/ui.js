@@ -148,7 +148,7 @@
     const s = save();
     const C = G.campaign;
     const sel = C.byId(selectId || s.progress.lastMission || C.suggested(s).id) || C.suggested(s);
-    const X = (st) => 56 + (st - 1) * 112;
+    const X = (st) => 50 + (st - 1) * 98;
     const Y = { A: 112, C: 200, B: 288 };
     const nodes = C.missions;
     let lines = '';
@@ -175,7 +175,7 @@
     const av = C.available(s, sel);
     const pw = powerOf();
     const pcls = pw >= sel.power ? 'ok' : pw >= sel.power - 5 ? 'warn' : 'bad';
-    const stages = [1, 2, 3, 4, 5].map((n) => `<div class="stage-lbl" style="left:${X(n)}px">STAGE ${n}</div>`).join('');
+    const stages = [1, 2, 3, 4, 5, 6].map((n) => `<div class="stage-lbl" style="left:${X(n)}px">${n === 6 ? 'EPILOGUE' : 'STAGE ' + n}</div>`).join('');
     UI.show('map', `
       <header class="bar">
         <div><div class="eyebrow">Meridian Reach</div><h2>Campaign Map</h2></div>
@@ -184,12 +184,12 @@
       <div class="map-wrap">
         <div class="map-area">
           ${stages}
-          <svg class="routes" width="560" height="360" viewBox="0 0 560 360">${lines}</svg>
+          <svg class="routes" width="600" height="360" viewBox="0 0 600 360">${lines}</svg>
           ${btns}
           <div class="legend"><span class="lg up"></span> Upper route opens with a bonus objective <span class="lg low"></span> Standard route</div>
         </div>
         <aside class="panel brief">
-          <div class="eyebrow">Stage ${sel.stage} · ${C.modeName[sel.mode]}${sel.lane === 'A' ? ' · Upper route' : ''}</div>
+          <div class="eyebrow">${sel.stage === 6 ? 'Epilogue' : 'Stage ' + sel.stage} · ${C.modeName[sel.mode]}${sel.lane === 'A' ? ' · Upper route' : ''}</div>
           <h3>${esc(sel.name)}</h3>
           <div class="pw ${pcls}">Recommended power ${sel.power} · yours ${pw}</div>
           <p class="brief-text">${esc(sel.brief)}</p>
@@ -415,6 +415,7 @@
         <h2>The Crown has fallen.</h2>
         <p>The dreadnought is breaking up over the Reach, and the storm walls are already thinning. The lanes are open. People are coming home.</p>
         <p>You did that, Wingbreaker. Every route you flew is still on the map. Go back for better salvage, chase the ranks you missed, and try the routes you didn't take.</p>
+        <p>One more thing. Long-range scopes picked up a single Crown fighter slipping out of the wreckage, and it is broadcasting your call sign. <b class="gold">Ace of Crowns</b> is now open on the map.</p>
         <button class="nav btn primary" data-autofocus id="b-go">Back to the Map</button>
       </div>
     `, () => UI.map());

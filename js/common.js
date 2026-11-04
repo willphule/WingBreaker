@@ -138,6 +138,8 @@
     vesk: { name: 'Vesk', color: '#ff6b5e', skin: '#8f6a52', hair: '#1c1c22', style: 'mohawk' },
     juno: { name: 'Juno', color: '#5fd4ff', skin: '#e6bf9c', hair: '#ff8fb8', style: 'bob' },
     crown: { name: 'Crown Regent', color: '#c77dff', skin: '#9da3b8', hair: '#2a2338', style: 'crown' },
+    veyra: { name: 'Veyra Solace', color: '#e0b0ff', skin: '#d9b8a0', hair: '#f1ecf7', style: 'bob' },
+    lantern: { name: 'Capt. Oduya, Lantern', color: '#9fe6b4', skin: '#6b4a35', hair: '#1c1c22', style: 'beret' },
     ops: { name: 'Dock Ops', color: '#9fe6b4', skin: '#b08968', hair: '#3a2c22', style: 'headset' },
   };
   G.radio = {
@@ -339,6 +341,8 @@
 
   HUD.ammo = function (ctx, label, ammo, max, cdFrac) {
     const x = G.W - 16, y = G.H - 20;
+    ctx.fillStyle = 'rgba(6,10,22,0.6)';
+    ctx.fillRect(x - 200, y - (cdFrac !== undefined ? 70 : 36), 208, cdFrac !== undefined ? 80 : 46);
     G.text(ctx, label, x, y - 18, { size: 11, align: 'right', color: '#aab6d6', outline: false });
     const n = Math.min(max, 20);
     for (let i = 0; i < n; i++) {
@@ -363,7 +367,7 @@
     ctx.globalAlpha = a;
     ctx.fillStyle = 'rgba(4,6,14,0.55)';
     ctx.fillRect(0, G.H * 0.36, G.W, 104);
-    G.text(ctx, `STAGE ${mission.stage}  ·  ${G.campaign.modeName[mission.mode].toUpperCase()}`, G.W / 2, G.H * 0.36 + 28, { size: 13, align: 'center', color: '#ffb347', outline: false });
+    G.text(ctx, `${mission.stage === 6 ? 'EPILOGUE' : 'STAGE ' + mission.stage}  ·  ${G.campaign.modeName[mission.mode].toUpperCase()}`, G.W / 2, G.H * 0.36 + 28, { size: 13, align: 'center', color: '#ffb347', outline: false });
     G.text(ctx, mission.name.toUpperCase(), G.W / 2, G.H * 0.36 + 66, { size: 38, weight: 800, align: 'center', color: '#ffffff', outline: false });
     G.text(ctx, 'BONUS: ' + mission.bonus.text, G.W / 2, G.H * 0.36 + 90, { size: 14, align: 'center', color: '#ffd37a', outline: false });
     ctx.restore();
