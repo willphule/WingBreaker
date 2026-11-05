@@ -18,9 +18,18 @@
 
   let noiseBuf = null;
 
+  // Safari reports 'interrupted' (not 'suspended') after a call or an app switch, so wake from any stopped state.
+  function wake() {
+    if (!A.ctx || A.ctx.state === 'running' || A.ctx.state === 'closed') return;
+    try {
+      const pr = A.ctx.resume();
+      if (pr && pr.catch) pr.catch(() => {});
+    } catch (e) { /* ignore */ }
+  }
+
   A.unlock = function () {
     if (A.ctx) {
-      if (A.ctx.state === 'suspended') A.ctx.resume();
+      wake();
       return;
     }
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -30,6 +39,7 @@
     } catch (e) {
       return;
     }
+    wake();
     const c = A.ctx;
     A.master = c.createGain();
     A.master.gain.value = A.muted ? 0 : 0.9;

@@ -241,6 +241,7 @@
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && G.state === 'mission') G.pause();
+    else if (!document.hidden && G.audio.ctx) G.audio.unlock();
   });
 
   // ---------- Boot ----------

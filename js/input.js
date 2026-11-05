@@ -128,6 +128,8 @@
   window.addEventListener('touchmove', handleTouches, { passive: false });
   window.addEventListener('touchend', handleTouches, { passive: false });
   window.addEventListener('touchcancel', handleTouches, { passive: false });
+  // Start or wake the audio on any tap or click, in menus too. iOS only allows this from touchend or click.
+  for (const ev of ['touchend', 'pointerdown', 'click']) window.addEventListener(ev, () => G.audio && G.audio.unlock(), { passive: true, capture: true });
 
   let lastGp = null;
   I.update = function (dt) {
