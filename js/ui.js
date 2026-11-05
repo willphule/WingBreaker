@@ -382,7 +382,8 @@
       ['Damage taken', Math.round(res.damageTaken)],
       ['Time', U.timeStr(res.time)],
       ['Bonus objective', res.bonus ? '<span class="gold">Complete</span>' : 'Missed'],
-      ...(res.bestChain !== undefined ? [['Best chain', `x${res.bestChain}`], ['Close calls', res.grazes], ['WINGBREAKs', res.breaks]] : []),
+      ...(res.bestChain !== undefined ? [[mission.mode === 'gauntlet' ? 'Best streak' : 'Best chain', `x${res.bestChain}`]] : []),
+      ...(res.grazes !== undefined ? [['Close calls', res.grazes], ['WINGBREAKs', res.breaks]] : []),
     ]).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
     UI.show('results', `
       <div class="res-wrap">

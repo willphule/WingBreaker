@@ -437,6 +437,54 @@
   }
   G.Particles2D = Particles2D;
 
+  // Kill chains and hit-stop for the speeder, on-foot and gauntlet modes (flight has its own richer version).
+  class Combo {
+    constructor(win = 2.4) {
+      this.win = win;
+      this.chain = 0;
+      this.t = 0;
+      this.best = 0;
+      this.stop = 0;
+    }
+    // Call once per frame with the real dt; returns the dt the mode should use.
+    step(dt) {
+      this.stop = Math.max(0, this.stop - dt);
+      const sdt = this.stop > 0 ? dt * 0.05 : dt;
+      if (this.t > 0) {
+        this.t -= sdt;
+        if (this.t <= 0) this.chain = 0;
+      }
+      return sdt;
+    }
+    freeze(s) {
+      this.stop = Math.max(this.stop, s);
+    }
+    // Counts a kill (or a pickup in the gauntlet) and returns the scrap multiplier for it.
+    kill(quiet) {
+      this.chain = this.t > 0 ? this.chain + 1 : 1;
+      this.t = this.win;
+      this.best = Math.max(this.best, this.chain);
+      if (this.chain >= 2 && !quiet) G.audio.play('chain', this.chain);
+      if (this.chain >= 5 && this.chain % 5 === 0) G.popups.add(G.W / 2, G.H * 0.28, `CHAIN x${this.chain}!`, '#ffd37a', 24, 1);
+      return this.mul();
+    }
+    drop() {
+      this.chain = 0;
+      this.t = 0;
+    }
+    mul() {
+      return 1 + Math.min(this.chain, 20) * 0.05;
+    }
+    draw(ctx, label = 'CHAIN', x = 16, y = 74) {
+      if (this.chain < 2) return;
+      const pop = Math.max(0, this.t - (this.win - 0.3)) * 3;
+      G.text(ctx, `${label} x${this.chain}`, x, y, { size: 18 + pop * 6, weight: 800, color: this.chain >= 10 ? '#ffd37a' : '#ffffff' });
+      HUD.bar(ctx, x, y + 6, 120, 3, this.t / this.win, '#ffd37a', 'rgba(255,211,122,0.15)');
+      G.text(ctx, `SCRAP x${this.mul().toFixed(2)}`, x, y + 22, { size: 11, color: '#ffd37a', outline: false });
+    }
+  }
+  G.Combo = Combo;
+
   // Builds the shared result payload each mode hands back when it ends.
   G.makeResult = function (o) {
     return Object.assign({ success: false, bonus: false, kills: 0, enemies: 1, damageTaken: 0, maxHp: 1, time: 0, scrap: 0, caches: 0 }, o);

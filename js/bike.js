@@ -33,6 +33,7 @@
 
   class Bike {
     constructor(mission, stats) {
+      this.combo = new G.Combo();
       this.m = mission;
       this.st = stats;
       this.th = THEMES[mission.theme];
@@ -159,7 +160,8 @@
     }
 
     // ---------- Update ----------
-    update(dt) {
+    update(rdt) {
+      const dt = this.combo.step(rdt);
       this.t += dt;
       this.phaseT += dt;
       G.radio.update(dt);
@@ -370,8 +372,10 @@
         G.audio.play(c.kind === 'courier' ? 'bigboom' : 'boom');
         G.shake(c.kind === 'courier' ? 12 : 4);
         if (c.countKill) this.kills++;
+        const mul = c.countKill ? this.combo.kill() : 1;
+        this.combo.freeze(c.kind === 'courier' ? 0.2 : 0.04);
         if (this.st.perks.has('leech')) this.v.addShield(6);
-        this.scrap += (c.kind === 'courier' ? 60 : c.kind === 'gunner' ? 10 : 7) * this.st.scrapMult;
+        this.scrap += (c.kind === 'courier' ? 60 : c.kind === 'gunner' ? 10 : 7) * this.st.scrapMult * mul;
         if (Math.random() < (c.kind === 'courier' ? 1 : 0.05)) {
           this.caches++;
           G.audio.play('cache');
@@ -449,7 +453,9 @@
     }
 
     playerHit(dmg) {
+      const hull = this.v.hull;
       const r = this.v.hit(dmg * (0.85 + this.m.stage * 0.06), 0.25);
+      if (this.v.hull < hull) this.combo.freeze(0.05);
       if (r === 'dead' && this.phase !== 'dead') {
         this.phase = 'dead';
         this.phaseT = 0;
@@ -464,7 +470,7 @@
       if (this.result) return;
       this.result = G.makeResult({
         success, bonus: this.bonusDone, kills: this.kills, enemies: Math.max(1, this.enemies), damageTaken: this.v.damageTaken,
-        maxHp: this.v.maxHull + this.v.maxShield, time: this.t, scrap: Math.round(this.scrap), caches: this.caches,
+        maxHp: this.v.maxHull + this.v.maxShield, time: this.t, bestChain: this.combo.best, scrap: Math.round(this.scrap), caches: this.caches,
       });
     }
 
@@ -868,6 +874,7 @@
 
     drawHUD(ctx) {
       G.hud.vitals(ctx, this.v);
+      this.combo.draw(ctx);
       G.hud.scoreBox(ctx, this.scrap, `KILLS ${this.kills}` + (this.caches ? `  ·  CACHES ${this.caches}` : ''));
       G.hud.objective(ctx, this.m.bonus.text, this.bonusDone ? 1 : 0, 1, this.bonusDone);
       // Track progress strip with player and courier markers.

@@ -34,7 +34,7 @@ Status key: `[x]` done and pushed, `[ ]` not started, `[~]` partly done (see not
 
 ## Stretch (only if budget is left)
 
-- [ ] **S1.** Chain counter and hit-stop for the speeder, on-foot and gauntlet modes.
+- [x] **S1.** Chain counter and hit-stop for the speeder, on-foot and gauntlet modes.
 - [x] **S2.** An endless "Sortie" flight mode with a local high-score table.
 - [ ] **S3.** Ship paint schemes unlocked by S ranks.
 
