@@ -61,7 +61,7 @@ The modes:
 
 ## Endless Sortie
 
-Clear Redstone Canyon and **Endless Sortie** opens on the title screen. Pick any flight sector you have cleared and fly it in waves until your ship is lost. Every wave ends with a boss, each new wave brings a different boss from across the campaign, and enemies get tougher every wave. Between waves your hull is patched and your ordnance is topped up. Score comes from kills (more during a chain), close calls and cleared waves. Your best score and wave are saved for each sector, and you keep the scrap and salvage when the run ends.
+Clear Redstone Canyon and **Endless Sortie** opens on the title screen. Pick any flight sector you have cleared and fly it in waves until your ship is lost. Every wave ends with a boss, each new wave brings a different boss from across the campaign, and enemies get tougher every wave. Between waves your hull is patched and your ordnance is topped up. In Lantern Escort the Lantern flies with you, gets repaired between waves, and the run ends if it is lost. Score comes from kills (more during a chain), close calls and cleared waves. Your best score and wave are saved for each sector, and you keep the scrap and salvage when the run ends.
 
 ## Loot and upgrades
 
@@ -71,7 +71,7 @@ Clear Redstone Canyon and **Endless Sortie** opens on the title screen. Pick any
 - Missions pay out scrap and gear based on your rank (S to D), the bonus objective, a first clear, and any loot caches you picked up.
 - Spend scrap on permanent upgrades: hull, shield, weapon damage, ordnance ammo, thrusters and salvage. You can also dismantle spare gear for scrap.
 
-- **Paint schemes.** Six paint schemes for your ship, earned with S ranks on campaign missions (1, 3, 5, 8 and all 12). Apply them in the hangar's Paint Shop, which shows a turning preview of the ship.
+- **Paint schemes.** Six paint schemes for your ship, earned with S ranks on campaign missions (1, 3, 5, 8 and all 12). Apply them in the hangar's Paint Shop, which shows a turning preview of the ship. The speeder bike uses the same paint.
 
 Progress saves in the browser's localStorage.
 

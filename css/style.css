@@ -224,3 +224,4 @@ kbd { font-family: var(--display); font-size: 11px; padding: 1px 5px; border: 1p
 .paint-card .sc { font-size: 12px; opacity: 0.75; font-weight: 500; }
 .paint-card.sel { border-color: var(--amber); }
 .paint-card.locked { opacity: 0.4; cursor: default; }
+.btn .btn-sub { float: right; font-size: 12px; font-weight: 500; opacity: 0.7; margin-top: 3px; }

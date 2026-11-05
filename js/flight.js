@@ -247,7 +247,7 @@
       this.initDecor();
       G.radio.clear();
       G.popups.clear();
-      const intro = this.sortie ? [['harrow', `Endless sortie, ${mission.name.replace(' Sortie', '')}. No objective this time. Stay alive and run up the score.`], ['vesk', 'Every wave ends with something big, and it will not be the same thing twice.']] : this.th.intro;
+      const intro = this.sortie ? [['harrow', `Endless sortie, ${mission.name.replace(' Sortie', '')}. No objective this time. Stay alive and run up the score.`], this.th.escort ? ['lantern', 'The Lantern is flying with you. If we go down, the sortie is over.'] : ['vesk', 'Every wave ends with something big, and it will not be the same thing twice.']] : this.th.intro;
       for (const [who, line] of intro) G.radio.say(who, line, 3.8);
       G.audio.music(this.th.music);
     }
@@ -547,6 +547,11 @@
       this.bossKey = U.pick(Object.keys(BOSSES).filter((k) => k !== last));
       this.v.heal(this.v.maxHull * 0.25);
       this.ammo = Math.min(this.maxAmmo, this.ammo + Math.ceil(this.maxAmmo / 2));
+      const fr = this.friend;
+      if (fr && !fr.dead) {
+        fr.hp = Math.min(fr.max, fr.hp + fr.max * 0.3);
+        fr.warned = false;
+      }
       G.audio.music(this.th.music);
       G.popups.add(G.W / 2, G.H * 0.4, `WAVE ${this.wave - 1} CLEAR  +${U.fmt(bonus)}`, '#ffd37a', 22, 2.2);
       G.radio.say('harrow', `Wave ${this.wave} inbound. Hull patched and ordnance topped up. Keep it going.`, 3.2, true);
@@ -1388,7 +1393,11 @@
         for (let i = 0; i < 5; i++) this.explosion(fr.x + U.rand(-3, 3), fr.y + U.rand(-1, 1), fr.z + U.rand(-6, 6), 2.5, '#ffb347');
         G.audio.play('bigboom');
         G.shake(14);
-        G.radio.say('harrow', 'We lost the Lantern... Finish the fight, Wingbreaker. Make it count.', 3.6, true);
+        if (this.sortie) {
+          // In a sortie the Lantern is the run: lose it and it is over.
+          this.die();
+          G.radio.say('harrow', 'The Lantern is gone. That is the end of the sortie.', 3.6, true);
+        } else G.radio.say('harrow', 'We lost the Lantern... Finish the fight, Wingbreaker. Make it count.', 3.6, true);
       }
     }
 
@@ -2329,7 +2338,7 @@
       this.drawChain(ctx);
       if (this.phase !== 'intro' && this.phase !== 'outro' && this.phase !== 'dead') this.drawBreak(ctx);
       G.hud.scoreBox(ctx, this.scrap, `KILLS ${this.kills}` + (this.caches ? `  ·  CACHES ${this.caches}` : ''));
-      if (this.friend) {
+      if (this.friend && !this.sortie) {
         const fr = this.friend;
         const f = fr.hp / fr.max;
         const ok = f >= 0.5 && !fr.dead;
@@ -2343,6 +2352,12 @@
       } else if (this.sortie) {
         G.text(ctx, `WAVE ${this.wave}`, G.W / 2, 20, { size: 10, align: 'center', color: '#ffd37a', outline: false });
         G.text(ctx, U.fmt(this.score), G.W / 2, 40, { size: 20, weight: 800, align: 'center', color: '#ffffff' });
+        if (this.friend) {
+          // The Lantern's hull, under the chain counter.
+          const f = this.friend.hp / this.friend.max;
+          G.text(ctx, `LANTERN ${Math.round(f * 100)}%`, 16, 116, { size: 11, color: f > 0.3 ? '#9fe6b4' : '#ff6b5e', outline: false });
+          G.hud.bar(ctx, 16, 121, 120, 4, f, f > 0.3 ? '#9fe6b4' : '#ff6b5e', 'rgba(159,230,180,0.12)');
+        }
         if (this.sortieBest && !this.boss) G.text(ctx, `BEST ${U.fmt(Math.max(this.sortieBest, this.score))}`, G.W / 2, 55, { size: 10, align: 'center', color: this.score > this.sortieBest ? '#ffd37a' : '#8f98b3', outline: false });
       } else if (this.m.bonus) G.hud.objective(ctx, this.m.bonus.text, Math.min(this.bonusCount, this.bonusNeed), this.bonusNeed, this.bonusDone);
       if (this.boss && this.boss.state !== 'enter') {
