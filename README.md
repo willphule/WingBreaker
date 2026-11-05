@@ -58,6 +58,10 @@ The modes:
 - **On foot.** A top-down 2.5D boarding action with cover, squads that alert each other, grenades and a dash. Destroy three reactor cores, then reach extraction before reinforcements catch you.
 - **Gauntlet.** A three-lane tunnel that keeps getting faster. Jump low walls and pits, duck under bars, and switch lanes around tall walls.
 
+## Endless Sortie
+
+Clear Redstone Canyon and **Endless Sortie** opens on the title screen. Pick any flight sector you have cleared and fly it in waves until your ship is lost. Every wave ends with a boss, each new wave brings a different boss from across the campaign, and enemies get tougher every wave. Between waves your hull is patched and your ordnance is topped up. Score comes from kills (more during a chain), close calls and cleared waves. Your best score and wave are saved for each sector, and you keep the scrap and salvage when the run ends.
+
 ## Loot and upgrades
 
 - Four gear slots: primary cannon, ordnance, frame and shield array. Each has several archetypes, for example Pulse Laser, Twin Repeater, Scatter Cannon and Rail Lance.
@@ -104,4 +108,4 @@ On touch screens, drag on the left half of the screen to steer and use the on-sc
 
 `tools/smoke.js` is a headless smoke test for the flight missions. It needs Playwright with Chromium: run `node tools/smoke.js`, or `node tools/smoke.js canyon storm` for only some missions.
 
-To jump straight into a mission while testing, add `?mission=<id>` to the URL, for example `index.html?mission=storm`. The mission ids are `canyon`, `storm`, `frost`, `saltflat`, `dock`, `caldera`, `scrapline`, `boarding`, `lantern`, `undertow`, `crownfall` and `ace`.
+To jump straight into a mission while testing, add `?mission=<id>` to the URL, for example `index.html?mission=storm`. The mission ids are `canyon`, `storm`, `frost`, `saltflat`, `dock`, `caldera`, `scrapline`, `boarding`, `lantern`, `undertow`, `crownfall` and `ace`. For a sortie, use `sortie-` and a flight mission id, for example `?mission=sortie-frost`.

@@ -31,7 +31,7 @@
 
   // ---------- Mission flow ----------
   G.startMission = function (id) {
-    const m = G.campaign.byId(id);
+    const m = typeof id === 'object' ? id : G.campaign.byId(id);
     const s = G.save.data;
     const st = G.gear.stats(s);
     G.mission = m;
@@ -40,7 +40,7 @@
     G.mode = G.modes[m.mode](m, st);
     G.state = 'mission';
     G.ui.hide();
-    s.progress.lastMission = id;
+    if (!m.sortie) s.progress.lastMission = m.id;
     G.save.write();
     I.consume();
     G.shakeAmt = 0;
@@ -63,10 +63,15 @@
     G.mode = null;
     G.radio.clear();
     G.audio.muffle(0);
-    G.ui.map(m && m.id);
+    if (m && m.sortie) G.ui.sortie();
+    else G.ui.map(m && m.id);
   };
 
   function rankOf(res) {
+    if (res.sortie) {
+      const w = res.wave;
+      return { rank: w >= 5 ? 'S' : w >= 4 ? 'A' : w >= 3 ? 'B' : w >= 2 ? 'C' : 'D', score: 0 };
+    }
     if (!res.success) return { rank: 'D', score: 0 };
     const killR = U.clamp(res.kills / Math.max(1, res.enemies), 0, 1);
     const dmgR = U.clamp(res.damageTaken / Math.max(1, res.maxHp) / 1.5, 0, 1);
@@ -81,7 +86,7 @@
     const C = G.campaign;
     const st = G.gear.stats(s);
     const { rank } = rankOf(res);
-    const firstClear = res.success && !s.progress.cleared[m.id];
+    const firstClear = res.success && !m.sortie && !s.progress.cleared[m.id];
     let scrap = res.scrap;
     if (res.success) scrap += Math.round((60 + 25 * m.stage + { S: 120, A: 80, B: 40, C: 20, D: 0 }[rank]) * st.scrapMult);
     else scrap = Math.round(scrap * 0.5);
@@ -107,7 +112,15 @@
     s.scrap += scrap;
 
     const before = new Set(C.missions.filter((x) => C.available(s, x)).map((x) => x.id));
-    if (res.success) {
+    let newBest = false;
+    if (m.sortie) {
+      const so = (s.sortie = s.sortie || { best: {}, bestWave: {} });
+      if (res.score > (so.best[m.sector] || 0)) {
+        so.best[m.sector] = res.score;
+        newBest = true;
+      }
+      so.bestWave[m.sector] = Math.max(so.bestWave[m.sector] || 0, res.wave);
+    } else if (res.success) {
       s.progress.cleared[m.id] = true;
       if (res.bonus) s.progress.bonus[m.id] = true;
       const prev = s.progress.best[m.id];
@@ -124,7 +137,7 @@
       ending = true;
     }
     G.save.write();
-    return { rank, scrap, items, unlocks, note, ending };
+    return { rank, scrap, items, unlocks, note, ending, newBest };
   }
 
   function endMission(res) {
@@ -232,7 +245,8 @@
   G.audio.setMuted(st.muted);
   const q = new URLSearchParams(location.search);
   const direct = q.get('mission') || (location.hash.startsWith('#play-') ? location.hash.slice(6) : null);
-  if (direct && G.campaign.byId(direct)) G.startMission(direct);
+  if (direct && direct.startsWith('sortie-') && G.campaign.sortie(direct.slice(7))) G.startMission(G.campaign.sortie(direct.slice(7)));
+  else if (direct && G.campaign.byId(direct)) G.startMission(direct);
   else G.ui.title();
   requestAnimationFrame(frame);
   // Exposed for automated checks.

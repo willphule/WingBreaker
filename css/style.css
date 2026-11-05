@@ -207,3 +207,10 @@ kbd { font-family: var(--display); font-size: 11px; padding: 1px 5px; border: 1p
     padding: 0 max(16px, env(safe-area-inset-left, 0px));
   }
 }
+
+/* Endless Sortie */
+.sortie-panel { display: flex; flex-direction: column; gap: 12px; }
+.sortie-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.sortie-card { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; }
+.sortie-card .sc { font-size: 13px; opacity: 0.75; font-weight: 500; }
+.sortie-card.locked { opacity: 0.4; cursor: default; }

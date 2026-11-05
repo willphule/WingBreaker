@@ -208,6 +208,11 @@
       this.timers = [];
       // Time control (hit-stop, slow motion), kill chains, close calls and the WINGBREAK meter.
       this.hasBreak = true;
+      this.sortie = !!mission.sortie;
+      this.wave = 1;
+      this.score = 0;
+      this.bossKey = null;
+      this.sortieBest = this.sortie ? ((G.save.data.sortie && G.save.data.sortie.best[mission.sector]) || 0) : 0;
       this.ts = 1;
       this.hitStop = 0;
       this.slowT = 0;
@@ -241,7 +246,8 @@
       this.initDecor();
       G.radio.clear();
       G.popups.clear();
-      for (const [who, line] of this.th.intro) G.radio.say(who, line, 3.8);
+      const intro = this.sortie ? [['harrow', `Endless sortie, ${mission.name.replace(' Sortie', '')}. No objective this time. Stay alive and run up the score.`], ['vesk', 'Every wave ends with something big, and it will not be the same thing twice.']] : this.th.intro;
+      for (const [who, line] of intro) G.radio.say(who, line, 3.8);
       G.audio.music(this.th.music);
     }
 
@@ -252,13 +258,13 @@
       const len = th.length;
       let t = 2;
       while (t < len) {
-        const diff = t / len;
-        const choices = th.patterns.filter((p) => (p[2] || 0) <= t).map((p) => [p[0], p[1]]);
+        const diff = Math.min(1, t / len + (this.wave - 1) * 0.15);
+        const choices = th.patterns.filter((p) => (p[2] || 0) <= t + (this.wave > 1 ? 99 : 0)).map((p) => [p[0], p[1]]);
         const name = U.weighted(choices);
         ev.push({ t, kind: 'pattern', name, diff });
         t += PATTERNS[name].gap * (1.05 - diff * 0.32) + U.rand(0, 0.7);
       }
-      th.bonusTimes.forEach((bt, i) => {
+      (this.sortie ? [] : th.bonusTimes).forEach((bt, i) => {
         ev.push({ t: bt, kind: 'bonus', i });
         // Keep the bonus target's airspace clear of obstacle patterns.
         for (const e of ev) if (e.kind === 'pattern' && Math.abs(e.t - bt) < 1.4 && PATTERNS[e.name].solid) e.t = bt + 1.6;
@@ -457,6 +463,7 @@
         if (this.chain >= 5 && this.chain % 5 === 0) G.popups.add(G.W / 2, G.H * 0.28, `CHAIN x${this.chain}!`, '#ffd37a', 24, 1);
       }
       const chainMul = this.chainMul();
+      if (e.countKill && this.sortie) this.score += Math.round(Math.max(5, e.scrapV || 0) * 10 * chainMul * (1 + (this.wave - 1) * 0.25));
       if (this.st.perks.has('leech')) this.v.addShield(6);
       if (this.st.perks.has('resupply') && Math.random() < 0.18 && this.ammo < this.maxAmmo) {
         this.ammo++;
@@ -522,6 +529,28 @@
       this.parts.push({ x: x + U.rand(-0.5, 0.5), y: y + U.rand(-0.4, 0.4), z, vx: U.rand(-1, 1), vy: U.rand(1.5, 3.5), vz, life: U.rand(0.6, 1.0), max: 1.0, size: size * U.rand(0.7, 1.2), smoke: true, col: '#2c2a31', drag: 0.97 });
     }
 
+    // ---------- Endless Sortie ----------
+    nextWave() {
+      const bonus = 2500 * this.wave;
+      this.score += bonus;
+      this.wave++;
+      this.m.stage = Math.min(6, this.m.stage + 1);
+      this.diffMul = U.clamp(1 + (this.wave - 1) * 0.15, 1, 2.4);
+      this.phase = 'play';
+      this.phaseT = 0;
+      this.lt = 0;
+      this.si = 0;
+      this.script = this.buildScript();
+      // Each new wave ends with a different boss from the last one.
+      const last = this.bossKey || this.th.boss;
+      this.bossKey = U.pick(Object.keys(BOSSES).filter((k) => k !== last));
+      this.v.heal(this.v.maxHull * 0.25);
+      this.ammo = Math.min(this.maxAmmo, this.ammo + Math.ceil(this.maxAmmo / 2));
+      G.audio.music(this.th.music);
+      G.popups.add(G.W / 2, G.H * 0.4, `WAVE ${this.wave - 1} CLEAR  +${U.fmt(bonus)}`, '#ffd37a', 22, 2.2);
+      G.radio.say('harrow', `Wave ${this.wave} inbound. Hull patched and ordnance topped up. Keep it going.`, 3.2, true);
+    }
+
     // ---------- Chains, close calls and WINGBREAK ----------
     chainMul() {
       return 1 + Math.min(this.chain, 20) * 0.05;
@@ -541,6 +570,7 @@
     }
     graze() {
       this.grazes++;
+      if (this.sortie) this.score += 50 * this.wave;
       this.addBreak(0.05);
       this.v.addShield(3);
       G.audio.play('graze');
@@ -665,7 +695,7 @@
       const pdt = this.wb > 0 && this.hitStop <= 0 ? rdt : dt;
       G.audio.muffle(this.phase === 'dead' || ts < 0.4 ? 1 : this.wb > 0 ? 0.5 : 0);
       this.t += dt;
-      this.phaseT += dt;
+      this.phaseT += this.phase === 'dead' ? rdt : dt;
       const p = this.p;
       const V = this.view;
       this.dist += this.S * dt;
@@ -1181,7 +1211,7 @@
 
     // ---------- Boss ----------
     spawnBoss() {
-      const def = BOSSES[this.th.boss];
+      const def = BOSSES[this.bossKey || this.th.boss];
       const mul = 1 + (this.m.stage - 1) * 0.08;
       this.phase = 'boss';
       const B = (this.boss = { def, x: 0, y: def.y, z: FAR + 20, t: 0, state: 'enter', parts: [], core: null, deathT: 0, yOff: def.rise || 0 });
@@ -1263,6 +1293,10 @@
           this.flashT = 0.5;
           if (B.body) B.body.dead = true;
           this.boss = null;
+          if (this.sortie) {
+            this.nextWave();
+            return;
+          }
           this.phase = 'outro';
           this.phaseT = 0;
           G.audio.music('victory');
@@ -1466,7 +1500,7 @@
       if (this.result) return;
       if (this.friend) this.bonusDone = !this.friend.dead && this.friend.hp >= this.friend.max * 0.5;
       this.result = G.makeResult({
-        success,
+        success: this.sortie ? true : success,
         bonus: this.bonusDone,
         kills: this.kills,
         enemies: Math.max(1, this.enemies),
@@ -1476,6 +1510,9 @@
         scrap: Math.round(this.scrap),
         caches: this.caches,
         bestChain: this.bestChain,
+        sortie: this.sortie,
+        score: this.score,
+        wave: this.wave,
         grazes: this.grazes,
         breaks: this.breaks,
       });
@@ -2302,6 +2339,10 @@
           ctx.fillStyle = 'rgba(255,255,255,0.6)';
           ctx.fillRect(G.W / 2 - 1, 44, 2, 9);
         }
+      } else if (this.sortie) {
+        G.text(ctx, `WAVE ${this.wave}`, G.W / 2, 20, { size: 10, align: 'center', color: '#ffd37a', outline: false });
+        G.text(ctx, U.fmt(this.score), G.W / 2, 40, { size: 20, weight: 800, align: 'center', color: '#ffffff' });
+        if (this.sortieBest && !this.boss) G.text(ctx, `BEST ${U.fmt(Math.max(this.sortieBest, this.score))}`, G.W / 2, 55, { size: 10, align: 'center', color: this.score > this.sortieBest ? '#ffd37a' : '#8f98b3', outline: false });
       } else if (this.m.bonus) G.hud.objective(ctx, this.m.bonus.text, Math.min(this.bonusCount, this.bonusNeed), this.bonusNeed, this.bonusDone);
       if (this.boss && this.boss.state !== 'enter') {
         const B = this.boss;

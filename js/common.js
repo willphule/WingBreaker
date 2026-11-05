@@ -367,7 +367,7 @@
     ctx.globalAlpha = a;
     ctx.fillStyle = 'rgba(4,6,14,0.55)';
     ctx.fillRect(0, G.H * 0.36, G.W, 104);
-    G.text(ctx, `${mission.stage === 6 ? 'EPILOGUE' : 'STAGE ' + mission.stage}  ·  ${G.campaign.modeName[mission.mode].toUpperCase()}`, G.W / 2, G.H * 0.36 + 28, { size: 13, align: 'center', color: '#ffb347', outline: false });
+    G.text(ctx, `${mission.eyebrow || (mission.stage === 6 ? 'EPILOGUE' : 'STAGE ' + mission.stage)}  ·  ${G.campaign.modeName[mission.mode].toUpperCase()}`, G.W / 2, G.H * 0.36 + 28, { size: 13, align: 'center', color: '#ffb347', outline: false });
     G.text(ctx, mission.name.toUpperCase(), G.W / 2, G.H * 0.36 + 66, { size: 38, weight: 800, align: 'center', color: '#ffffff', outline: false });
     G.text(ctx, 'BONUS: ' + mission.bonus.text, G.W / 2, G.H * 0.36 + 90, { size: 14, align: 'center', color: '#ffd37a', outline: false });
     ctx.restore();

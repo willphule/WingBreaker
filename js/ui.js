@@ -111,6 +111,7 @@
       </div>
       <div class="menu-col">
         <button class="nav btn primary" data-autofocus id="b-play">${started ? 'Continue Campaign' : 'Start Campaign'}</button>
+        ${s.progress.cleared.canyon ? '<button class="nav btn" id="b-sortie">Endless Sortie</button>' : ''}
         <button class="nav btn" id="b-hangar">Hangar &amp; Loadout</button>
         <button class="nav btn" id="b-help">How to Play</button>
         <button class="nav btn" id="b-settings">Settings</button>
@@ -118,6 +119,7 @@
       <div class="foot-note">Keyboard, gamepad or touch · ${G.save.available ? 'Progress saves on this device' : 'Storage is blocked, so progress will not be saved'}</div>
     `);
     document.getElementById('b-play').onclick = () => (s.seenIntro ? UI.map() : UI.intro());
+    if (document.getElementById('b-sortie')) document.getElementById('b-sortie').onclick = () => UI.sortie();
     document.getElementById('b-hangar').onclick = () => UI.hangar(UI.title);
     document.getElementById('b-help').onclick = () => UI.help(UI.title);
     document.getElementById('b-settings').onclick = () => UI.settings(UI.title);
@@ -367,18 +369,25 @@
   // ---------- Results ----------
   UI.results = function (mission, res, rw) {
     const cards = rw.items.map((it) => `<div class="mini-card" style="--rc:${rarityColor(it.rarity)}"><div class="rar">${G.gear.RARITY[it.rarity].name}</div><div class="iname">${esc(it.name)}</div><div class="arch">${esc(G.gear.ARCH[it.slot][it.arch].name)} · ${it.power}</div></div>`).join('');
-    const rows = [
+    const rows = (mission.sortie ? [
+      ['Score', `${U.fmt(res.score)}${rw.newBest ? ' <span class="gold">New best!</span>' : ''}`],
+      ['Wave reached', res.wave],
+      ['Enemies destroyed', res.kills],
+      ['Best chain', `x${res.bestChain}`],
+      ['Close calls', res.grazes],
+      ['WINGBREAKs', res.breaks],
+    ] : [
       ['Result', res.success ? 'Mission complete' : 'Mission failed'],
       [mission.mode === 'gauntlet' ? 'Power cells' : 'Enemies destroyed', `${res.kills} / ${res.enemies}`],
       ['Damage taken', Math.round(res.damageTaken)],
       ['Time', U.timeStr(res.time)],
       ['Bonus objective', res.bonus ? '<span class="gold">Complete</span>' : 'Missed'],
       ...(res.bestChain !== undefined ? [['Best chain', `x${res.bestChain}`], ['Close calls', res.grazes], ['WINGBREAKs', res.breaks]] : []),
-    ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+    ]).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
     UI.show('results', `
       <div class="res-wrap">
         <div class="panel res-main">
-          <div class="eyebrow">${esc(mission.name)} · After-action report</div>
+          <div class="eyebrow">${esc(mission.name)} · ${mission.sortie ? 'Sortie over' : 'After-action report'}</div>
           <div class="res-head">
             <div class="rank rank-${rw.rank}">${res.success ? rw.rank : '✕'}</div>
             <dl class="res-stats">${rows}</dl>
@@ -394,17 +403,18 @@
         </div>
       </div>
       <footer class="bar-bottom">
-        ${res.success ? '' : '<button class="nav btn small" id="b-retry">Retry Mission</button>'}
+        ${res.success && !mission.sortie ? '' : `<button class="nav btn small" id="b-retry">${mission.sortie ? 'Fly Again' : 'Retry Mission'}</button>`}
         ${rw.items.length ? '<button class="nav btn small" id="b-hangar">Open Hangar</button>' : ''}
         <button class="nav btn primary" id="b-cont" data-autofocus>Continue</button>
       </footer>
     `, () => document.getElementById('b-cont').click());
-    const next = () => (rw.ending ? UI.ending() : UI.map(mission.id));
+    const back = () => (mission.sortie ? UI.sortie() : UI.map(mission.id));
+    const next = () => (rw.ending ? UI.ending() : back());
     document.getElementById('b-cont').onclick = next;
     const h = document.getElementById('b-hangar');
-    if (h) h.onclick = () => UI.hangar(() => UI.map(mission.id));
+    if (h) h.onclick = () => UI.hangar(back);
     const r = document.getElementById('b-retry');
-    if (r) r.onclick = () => G.startMission(mission.id);
+    if (r) r.onclick = () => G.startMission(again(mission));
     G.audio.music(res.success ? 'victory' : 'hangar');
     G.menuScene = 'results';
   };
@@ -424,6 +434,43 @@
     G.audio.music('victory');
   };
 
+  // A fresh copy of the mission to fly again (sortie missions are built per run).
+  const again = (m) => (m.sortie ? G.campaign.sortie(m.sector) : m.id);
+
+  // ---------- Endless Sortie ----------
+  UI.sortie = function () {
+    const s = save();
+    const C = G.campaign;
+    const so = s.sortie || { best: {}, bestWave: {} };
+    const cards = C.sortieSectors.map((id) => {
+      const m = C.byId(id);
+      const open = !!s.progress.cleared[id];
+      const info = !open ? 'Clear this mission to open it' : so.best[id] ? `Best ${U.fmt(so.best[id])} · wave ${so.bestWave[id] || 1}` : 'No runs yet';
+      return `<button class="nav btn sortie-card ${open ? '' : 'locked'}" data-id="${id}"><span class="nm">${esc(m.name)}</span><span class="sc">${info}</span></button>`;
+    }).join('');
+    UI.show('sortie', `
+      <header class="bar">
+        <div><div class="eyebrow">Endless flight</div><h2>Sortie</h2></div>
+        <div class="stats"><span>POWER <b>${powerOf()}</b></span><span class="scrap">◆ ${U.fmt(s.scrap)}</span></div>
+      </header>
+      <div class="panel sortie-panel">
+        <p class="brief-text">Fly one sector for as long as you can. Every wave ends with a boss, and each new wave brings a different one. Enemies get tougher every wave. Score comes from kills, chains, close calls and cleared waves. You keep the scrap and salvage when the run ends.</p>
+        <div class="sortie-grid">${cards}</div>
+      </div>
+      <footer class="bar-bottom">
+        <button class="nav btn small" id="b-back">◂ Title</button>
+        <button class="nav btn small" id="b-hangar">Hangar &amp; Loadout</button>
+      </footer>
+    `, UI.title);
+    root().querySelectorAll('.sortie-card').forEach((b) => {
+      if (!b.classList.contains('locked')) b.onclick = () => G.startMission(C.sortie(b.dataset.id));
+    });
+    document.getElementById('b-back').onclick = UI.title;
+    document.getElementById('b-hangar').onclick = () => UI.hangar(UI.sortie);
+    G.audio.music('hangar');
+    G.menuScene = 'map';
+  };
+
   // ---------- Pause ----------
   UI.pause = function (mission) {
     UI.show('pause', `
@@ -440,7 +487,7 @@
       </div>
     `, G.resume);
     document.getElementById('b-res').onclick = G.resume;
-    document.getElementById('b-restart').onclick = () => G.startMission(mission.id);
+    document.getElementById('b-restart').onclick = () => G.startMission(again(mission));
     document.getElementById('b-help').onclick = () => UI.help(() => UI.pause(mission));
     document.getElementById('b-set').onclick = () => UI.settings(() => UI.pause(mission));
     document.getElementById('b-quit').onclick = () => G.abandon();
