@@ -111,7 +111,7 @@
     return C.byId('crownfall');
   };
   // Endless Sortie: fly a cleared flight sector in waves until the ship is lost.
-  C.sortieSectors = ['canyon', 'storm', 'frost', 'dock', 'caldera', 'crownfall', 'ace'];
+  C.sortieSectors = ['canyon', 'storm', 'frost', 'dock', 'caldera', 'lantern', 'crownfall', 'ace'];
   C.sortie = function (sector) {
     const base = C.byId(sector);
     if (!base || C.sortieSectors.indexOf(sector) < 0) return null;

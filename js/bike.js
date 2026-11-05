@@ -918,8 +918,8 @@
   // Hoverbike seen from behind. k = pixels per road half-width unit.
   function drawBike(ctx, x, y, k, kind, lean, flash, t, boosting) {
     const s = k * BIKE_W * 0.62;
-    const cols = {
-      player: ['#e2e6ef', '#2f6bff', '#ff8c2a'],
+    const pal = kind === 'player' ? G.paints.find((p) => p.id === G.save.data.paint) || G.paints[0] : null;
+    const cols = pal ? [pal.hull, pal.accent, pal.fin] : {
       raider: ['#3d2d44', '#d23a48', '#ff4d5e'],
       gunner: ['#454a3a', '#c9a227', '#ff4d5e'],
       courier: ['#2c2440', '#c77dff', '#ffd37a'],
@@ -936,7 +936,7 @@
     // hover glow
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    G.drawGlow(ctx, kind === 'player' ? '#5fd4ff' : cols[2], 0, hy + s * 0.32, s * 0.7, 0.5);
+    G.drawGlow(ctx, pal ? pal.glass[0] : cols[2], 0, hy + s * 0.32, s * 0.7, 0.5);
     ctx.restore();
     // side pods
     ctx.fillStyle = flash ? '#fff' : cols[1];
@@ -971,11 +971,11 @@
     G.drawGlow(ctx, boosting ? '#5fd4ff' : cols[2], 0, hy + s * 0.16, s * (boosting ? 0.6 : 0.32) * (0.9 + Math.random() * 0.2), 1);
     ctx.restore();
     // rider
-    ctx.fillStyle = kind === 'player' ? '#3a4255' : '#221b28';
+    ctx.fillStyle = pal ? pal.gun : '#221b28';
     ctx.beginPath();
     ctx.ellipse(0, hy - s * 0.42, s * 0.24, s * 0.22, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = kind === 'player' ? '#e2e6ef' : cols[1];
+    ctx.fillStyle = pal ? pal.hull : cols[1];
     ctx.beginPath();
     ctx.arc(0, hy - s * 0.72, s * 0.15, 0, Math.PI * 2);
     ctx.fill();

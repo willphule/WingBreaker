@@ -103,6 +103,7 @@
   UI.title = function () {
     const s = save();
     const started = Object.keys(s.progress.cleared).length > 0;
+    const sortieBest = Math.max(0, ...Object.values((s.sortie && s.sortie.best) || {}));
     UI.show('title', `
       <div class="title-block">
         <div class="eyebrow">A Meridian Reach strike campaign</div>
@@ -111,7 +112,7 @@
       </div>
       <div class="menu-col">
         <button class="nav btn primary" data-autofocus id="b-play">${started ? 'Continue Campaign' : 'Start Campaign'}</button>
-        ${s.progress.cleared.canyon ? '<button class="nav btn" id="b-sortie">Endless Sortie</button>' : ''}
+        ${s.progress.cleared.canyon ? `<button class="nav btn" id="b-sortie">Endless Sortie${sortieBest ? ` <span class="btn-sub">Best ${U.fmt(sortieBest)}</span>` : ''}</button>` : ''}
         <button class="nav btn" id="b-hangar">Hangar &amp; Loadout</button>
         <button class="nav btn" id="b-help">How to Play</button>
         <button class="nav btn" id="b-settings">Settings</button>

@@ -45,7 +45,9 @@ Everything in the plan is done, stretch items included.
 - **S1:** the speeder, on-foot and gauntlet modes share `G.Combo` in `js/common.js`. Flight keeps its own fuller version in `js/flight.js`.
 - **S3:** paint schemes are `G.paints` in `js/models.js`. `G.models.shipPaint(id)` builds and caches one ship model per paint. The chosen paint is saved as `save.paint`, and the Paint Shop is `UI.paint` in `js/ui.js`.
 
-Ideas for a later pass, none of them started: more Sortie sectors (Lantern Escort was left out because of its escort rules), a sortie score on the title screen, and paint schemes for the speeder bike.
+Follow-ups done after the pass: Lantern Escort is a Sortie sector (losing the Lantern ends the run), the title screen shows your best Sortie score, and the speeder bike uses your paint.
+
+Ideas for later, not started: paint for the on-foot pilot, and a per-wave Sortie leaderboard instead of one best score per sector.
 
 ## Tuning knobs (all in `js/flight.js`)
 
