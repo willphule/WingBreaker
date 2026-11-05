@@ -373,6 +373,7 @@
       ['Damage taken', Math.round(res.damageTaken)],
       ['Time', U.timeStr(res.time)],
       ['Bonus objective', res.bonus ? '<span class="gold">Complete</span>' : 'Missed'],
+      ...(res.bestChain !== undefined ? [['Best chain', `x${res.bestChain}`], ['Close calls', res.grazes], ['WINGBREAKs', res.breaks]] : []),
     ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
     UI.show('results', `
       <div class="res-wrap">
@@ -453,7 +454,7 @@
         <div class="help-grid">
           <section><h4>Flight</h4><ul>
             <li><kbd>Arrows</kbd>/<kbd>WASD</kbd> steer</li><li><kbd>Space</kbd>/<kbd>J</kbd> fire (hold)</li>
-            <li><kbd>K</kbd>/<kbd>X</kbd> ordnance</li><li><kbd>Shift</kbd>/<kbd>L</kbd> evasive roll. It also bats enemy shots back</li></ul></section>
+            <li><kbd>K</kbd>/<kbd>X</kbd> ordnance</li><li><kbd>Shift</kbd>/<kbd>L</kbd> evasive roll. It also bats enemy shots back</li><li><kbd>Q</kbd>/<kbd>E</kbd> WINGBREAK when the break meter is full</li></ul><p class="hint">Quick kills build a chain that raises scrap. Kills, chains, close calls and batted-back shots fill the break meter.</p></section>
           <section><h4>Speeder Chase</h4><ul>
             <li>Throttle is automatic</li><li><kbd>Left</kbd>/<kbd>Right</kbd> steer, <kbd>Down</kbd> brake</li>
             <li><kbd>Space</kbd> fire, <kbd>K</kbd> missile</li><li><kbd>Shift</kbd> boost</li></ul></section>
@@ -463,7 +464,7 @@
           <section><h4>Gauntlet</h4><ul>
             <li><kbd>Up</kbd>/<kbd>Down</kbd> change lane</li><li><kbd>Space</kbd> jump</li><li><kbd>Shift</kbd> duck (hold)</li></ul></section>
         </div>
-        <p class="hint">Your shield recharges a few seconds after you stop taking hits. Hull does not, so grab green repair kits. <kbd>Esc</kbd>/<kbd>P</kbd> pauses. <kbd>M</kbd> mutes. A gamepad works too: stick to move, A fire, X ordnance, bumpers dodge, Start to pause.</p>
+        <p class="hint">Your shield recharges a few seconds after you stop taking hits. Hull does not, so grab green repair kits. <kbd>Esc</kbd>/<kbd>P</kbd> pauses. <kbd>M</kbd> mutes. A gamepad works too: stick to move, A fire, X ordnance, bumpers dodge, Y WINGBREAK, Start to pause.</p>
         <button class="nav btn primary" data-autofocus id="b-back">Back</button>
       </div>
     `, onBack);

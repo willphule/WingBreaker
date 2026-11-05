@@ -48,11 +48,13 @@
   G.pause = function () {
     if (G.state !== 'mission') return;
     G.state = 'paused';
+    G.audio.muffle(1);
     G.ui.pause(G.mission);
   };
   G.resume = function () {
     G.ui.hide();
     G.state = 'mission';
+    G.audio.muffle(0);
     I.consume();
   };
   G.abandon = function () {
@@ -60,6 +62,7 @@
     G.state = 'menu';
     G.mode = null;
     G.radio.clear();
+    G.audio.muffle(0);
     G.ui.map(m && m.id);
   };
 
@@ -113,6 +116,7 @@
     const unlocks = C.missions.filter((x) => C.available(s, x) && !before.has(x.id)).map((x) => x.name);
     s.stats.missions++;
     if (m.mode !== 'gauntlet') s.stats.kills += res.kills;
+    if (res.bestChain) s.stats.bestChain = Math.max(s.stats.bestChain || 0, res.bestChain);
     if (!res.success) s.stats.deaths++;
     let ending = false;
     if (m.id === 'crownfall' && res.success && !s.progress.campaignDone) {
@@ -128,6 +132,7 @@
     G.state = 'menu';
     G.mode = null;
     G.radio.clear();
+    G.audio.muffle(0);
     const rw = rewards(m, res);
     G.lastResult = { res, rw };
     G.ui.results(m, res, rw);
