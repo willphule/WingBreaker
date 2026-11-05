@@ -179,25 +179,41 @@
   // ---------- Model library ----------
   const L = (G.models = {});
 
-  L.ship = (() => {
+  // Paint schemes for the player's ship. Each one opens with enough S ranks on campaign missions.
+  G.paints = [
+    { id: 'meridian', name: 'Meridian Standard', need: 0, hull: '#e2e6ef', under: '#7d8799', accent: '#2f6bff', fin: '#ff8c2a', glass: ['#7fe4ff', '#3fb4e8'], gun: '#4b5263', tail: '#3a3f4d' },
+    { id: 'redstone', name: 'Redstone', need: 1, hull: '#e9d6c2', under: '#8a6a55', accent: '#c2412a', fin: '#ffd37a', glass: ['#ffe0a0', '#e0a040'], gun: '#4a3a33', tail: '#3a2e2a' },
+    { id: 'glacier', name: 'Glacier', need: 3, hull: '#f6fbff', under: '#9fb6c8', accent: '#5fd4ff', fin: '#ffffff', glass: ['#d8f0ff', '#8fc4e8'], gun: '#6b7f92', tail: '#4d5f70' },
+    { id: 'nightjar', name: 'Nightjar', need: 5, hull: '#2c3048', under: '#161927', accent: '#8f7dff', fin: '#ff5af0', glass: ['#ff9af0', '#c060d0'], gun: '#1e2133', tail: '#121420' },
+    { id: 'crownbreaker', name: 'Crownbreaker', need: 8, hull: '#1f1d24', under: '#0f0e12', accent: '#ffd37a', fin: '#ff4d5e', glass: ['#ffe9a8', '#ffc24a'], gun: '#2a2830', tail: '#141318' },
+    { id: 'prototype', name: 'Prototype Gold', need: 12, hull: '#ffe08a', under: '#b88a2a', accent: '#fff2c0', fin: '#ff8c2a', glass: ['#ffffff', '#bfe8ff'], gun: '#8a6a2a', tail: '#6a4f1a' },
+  ];
+  G.sRanks = (save) => Object.values(save.progress.best).filter((r) => r === 'S').length;
+  const shipCache = {};
+  L.shipPaint = (id) => {
+    const pal = G.paints.find((p) => p.id === id) || G.paints[0];
+    return shipCache[pal.id] || (shipCache[pal.id] = makeShip(pal));
+  };
+  function makeShip(pal) {
     const b = new MB();
-    const hull = '#e2e6ef', under = '#7d8799', accent = '#2f6bff', fin = '#ff8c2a';
+    const hull = pal.hull, under = pal.under, accent = pal.accent, fin = pal.fin;
     const N = [0, 0.05, 2.6];
     const mT = [0, 0.5, 0.3], mR = [0.55, 0, 0.3], mB = [0, -0.35, 0.3], mL = [-0.55, 0, 0.3];
     const tT = [0, 0.4, -1.3], tR = [0.45, 0, -1.3], tB = [0, -0.25, -1.3], tL = [-0.45, 0, -1.3];
     b.poly([N, mT, mR], hull); b.poly([N, mR, mB], under); b.poly([N, mB, mL], under); b.poly([N, mL, mT], hull);
     b.poly([mT, tT, tR, mR], hull); b.poly([mR, tR, tB, mB], under); b.poly([mB, tB, tL, mL], under); b.poly([mL, tL, tT, mT], hull);
-    b.poly([tT, tR, tB, tL], '#3a3f4d');
-    b.poly([[0, 0.74, -0.25], [0.24, 0.43, 0.35], [0, 0.4, 1.25]], '#7fe4ff', true);
-    b.poly([[0, 0.74, -0.25], [0, 0.4, 1.25], [-0.24, 0.43, 0.35]], '#3fb4e8', true);
+    b.poly([tT, tR, tB, tL], pal.tail);
+    b.poly([[0, 0.74, -0.25], [0.24, 0.43, 0.35], [0, 0.4, 1.25]], pal.glass[0], true);
+    b.poly([[0, 0.74, -0.25], [0, 0.4, 1.25], [-0.24, 0.43, 0.35]], pal.glass[1], true);
     for (const s of [1, -1]) {
       b.poly([[0.5 * s, 0, 0.5], [2.5 * s, -0.25, -0.8], [2.7 * s, -0.25, -1.45], [0.45 * s, 0, -1.25]], accent);
       b.poly([[2.5 * s, -0.25, -0.8], [2.7 * s, -0.25, -1.45], [2.78 * s, 0.55, -1.6]], fin);
-      b.box(1.2 * s, -0.12, 0.3, 0.22, 0.22, 1.6, '#4b5263');
+      b.box(1.2 * s, -0.12, 0.3, 0.22, 0.22, 1.6, pal.gun);
     }
     b.poly([[0, 0.42, -0.5], [0, 0.4, -1.3], [0, 1.15, -1.6]], fin);
     return b.build();
-  })();
+  }
+  L.ship = makeShip(G.paints[0]);
 
   L.dart = (() => {
     const b = new MB();

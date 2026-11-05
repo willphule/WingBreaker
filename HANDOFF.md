@@ -36,14 +36,16 @@ Status key: `[x]` done and pushed, `[ ]` not started, `[~]` partly done (see not
 
 - [x] **S1.** Chain counter and hit-stop for the speeder, on-foot and gauntlet modes.
 - [x] **S2.** An endless "Sortie" flight mode with a local high-score table.
-- [ ] **S3.** Ship paint schemes unlocked by S ranks.
+- [x] **S3.** Ship paint schemes unlocked by S ranks.
 
 ## Where things stopped
 
-Everything above is done except S1 and S3. They were left out on purpose, to save credits.
+Everything in the plan is done, stretch items included.
 
-- **S1** needs the same chain and hit-stop code in `js/bike.js`, `js/foot.js` and `js/gauntlet.js`. The flight versions to copy are `kill()`, `chainMul()`, `drawChain()`, and the time-scale block at the top of `Flight.update()`.
-- **S3** would turn `L.ship` in `js/models.js` into a function that takes colours, build a few variants, and add a picker to the hangar.
+- **S1:** the speeder, on-foot and gauntlet modes share `G.Combo` in `js/common.js`. Flight keeps its own fuller version in `js/flight.js`.
+- **S3:** paint schemes are `G.paints` in `js/models.js`. `G.models.shipPaint(id)` builds and caches one ship model per paint. The chosen paint is saved as `save.paint`, and the Paint Shop is `UI.paint` in `js/ui.js`.
+
+Ideas for a later pass, none of them started: more Sortie sectors (Lantern Escort was left out because of its escort rules), a sortie score on the title screen, and paint schemes for the speeder bike.
 
 ## Tuning knobs (all in `js/flight.js`)
 

@@ -54,6 +54,7 @@ The modes:
   - **Chains.** Kills in quick succession build a chain. The longer the chain, the more scrap each kill drops, up to double.
   - **Close calls.** Let an enemy shot slip past close without hitting you and you get a little shield back.
   - **WINGBREAK.** Kills, chains, close calls and shots you knock back with a roll fill the break meter at the bottom of the screen. When it is full, press Q to unleash it: for six seconds the world slows down around you, your cannon fires a triple gold stream at double rate, and nothing can hurt you. It ends in a shockwave that wipes enemy shots off the screen.
+- **Every mode** has kill chains that raise scrap, and a split-second freeze on big hits. In the gauntlet the chain is a streak of power cells, and getting hit breaks it.
 - **Speeder chase.** A pseudo-3D road with curves and hills. Shoot or ram raiders, hit boost pads, and catch the courier before it reaches the gate.
 - **On foot.** A top-down 2.5D boarding action with cover, squads that alert each other, grenades and a dash. Destroy three reactor cores, then reach extraction before reinforcements catch you.
 - **Gauntlet.** A three-lane tunnel that keeps getting faster. Jump low walls and pits, duck under bars, and switch lanes around tall walls.
@@ -69,6 +70,8 @@ Clear Redstone Canyon and **Endless Sortie** opens on the title screen. Pick any
 - **Power** is the average power of your gear plus your upgrade levels. Compare it with a mission's recommended power. Being under it means you deal less damage and take more.
 - Missions pay out scrap and gear based on your rank (S to D), the bonus objective, a first clear, and any loot caches you picked up.
 - Spend scrap on permanent upgrades: hull, shield, weapon damage, ordnance ammo, thrusters and salvage. You can also dismantle spare gear for scrap.
+
+- **Paint schemes.** Six paint schemes for your ship, earned with S ranks on campaign missions (1, 3, 5, 8 and all 12). Apply them in the hangar's Paint Shop, which shows a turning preview of the ship.
 
 Progress saves in the browser's localStorage.
 

@@ -306,7 +306,7 @@
         <button class="nav tab ${hs.tab === 'upgrades' ? 'on' : ''}" id="t-up">Upgrades</button>
       </div>
       ${body}
-      <footer class="bar-bottom"><button class="nav btn small" id="b-back">◂ Back</button><span class="hint">Inventory ${s.inventory.length}/40</span></footer>
+      <footer class="bar-bottom"><button class="nav btn small" id="b-back">◂ Back</button><button class="nav btn small" id="b-paint">Paint Shop</button><span class="hint">Inventory ${s.inventory.length}/40</span></footer>
     `, () => UI._hangarBack());
     const refocus = (sel) => {
       const el = root().querySelector(sel);
@@ -318,6 +318,7 @@
     document.getElementById('t-load').onclick = () => { hs.tab = 'loadout'; UI.hangar(); refocus('#t-load'); };
     document.getElementById('t-up').onclick = () => { hs.tab = 'upgrades'; UI.hangar(); refocus('#t-up'); };
     document.getElementById('b-back').onclick = () => UI._hangarBack();
+    document.getElementById('b-paint').onclick = () => UI.paint();
     if (hs.tab === 'loadout') {
       root().querySelectorAll('.slot').forEach((b) => (b.onclick = () => { hs.slot = b.dataset.slot; hs.item = null; UI.hangar(); refocus(`.slot[data-slot="${hs.slot}"]`); }));
       root().querySelectorAll('.irow').forEach((b) => (b.onclick = () => {
@@ -394,6 +395,7 @@
             <dl class="res-stats">${rows}</dl>
           </div>
           ${rw.unlocks.length ? `<div class="unlock">Route opened: ${rw.unlocks.map(esc).join(', ')}</div>` : ''}
+          ${rw.paints && rw.paints.length ? `<div class="unlock">Paint unlocked: ${rw.paints.map(esc).join(', ')}. Apply it in the hangar's Paint Shop.</div>` : ''}
           ${rw.note ? `<div class="hint">${esc(rw.note)}</div>` : ''}
         </div>
         <div class="panel res-loot">
@@ -437,6 +439,45 @@
 
   // A fresh copy of the mission to fly again (sortie missions are built per run).
   const again = (m) => (m.sortie ? G.campaign.sortie(m.sector) : m.id);
+
+  // ---------- Paint Shop ----------
+  UI.paint = function (focusId) {
+    const s = save();
+    const nS = G.sRanks(s);
+    const cur = (G.paints.find((p) => p.id === s.paint) || G.paints[0]).id;
+    const cards = G.paints.map((pt) => {
+      const open = nS >= pt.need;
+      const sw = [pt.hull, pt.under, pt.accent, pt.fin, pt.glass[0]].map((c) => `<i style="background:${c}"></i>`).join('');
+      const info = !open ? `Needs ${pt.need} S rank${pt.need > 1 ? 's' : ''}` : pt.id === cur ? 'Equipped' : 'Select to apply';
+      return `<button class="nav btn paint-card ${open ? '' : 'locked'} ${pt.id === cur ? 'sel' : ''}" data-id="${pt.id}"><span class="sw">${sw}</span><span class="nm">${esc(pt.name)}</span><span class="sc">${info}</span></button>`;
+    }).join('');
+    UI.show('paint', `
+      <header class="bar">
+        <div><div class="eyebrow">Hangar</div><h2>Paint Shop</h2></div>
+        <div class="stats"><span>S RANKS <b>${nS}</b> / ${G.campaign.missions.length}</span></div>
+      </header>
+      <div class="panel paint-panel">
+        <p class="hint">Earn paint schemes with S ranks on campaign missions. Replays count.</p>
+        <div class="paint-list">${cards}</div>
+      </div>
+      <footer class="bar-bottom"><button class="nav btn small" id="b-back">◂ Hangar</button></footer>
+    `, () => UI.hangar());
+    root().querySelectorAll('.paint-card').forEach((b) => {
+      if (b.classList.contains('locked')) return;
+      b.onclick = () => {
+        s.paint = b.dataset.id;
+        G.save.write();
+        G.audio.play('upgrade');
+        UI.paint(b.dataset.id);
+      };
+    });
+    if (focusId) {
+      const nb = root().querySelector(`.paint-card[data-id="${focusId}"]`);
+      if (nb) nb.focus({ preventScroll: true });
+    }
+    document.getElementById('b-back').onclick = () => UI.hangar();
+    G.menuScene = 'paint';
+  };
 
   // ---------- Endless Sortie ----------
   UI.sortie = function () {

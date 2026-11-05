@@ -208,6 +208,7 @@
       this.timers = [];
       // Time control (hit-stop, slow motion), kill chains, close calls and the WINGBREAK meter.
       this.hasBreak = true;
+      this.shipModel = MD.shipPaint(G.save.data.paint);
       this.sortie = !!mission.sortie;
       this.wave = 1;
       this.score = 0;
@@ -2114,7 +2115,7 @@
           ctx.restore();
         }
       }
-      R.drawModel(ctx, V, MD.ship, p.x, p.y, p.z, -p.pitch, p.vx * 0.015, p.roll + p.spin, SHIP_SC, { flash: this.v.flash > 0.2 ? 0.5 : 0 });
+      R.drawModel(ctx, V, this.shipModel, p.x, p.y, p.z, -p.pitch, p.vx * 0.015, p.roll + p.spin, SHIP_SC, { flash: this.v.flash > 0.2 ? 0.5 : 0 });
       const tail = R.project(V, p.x, p.y, p.z - 0.9);
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
