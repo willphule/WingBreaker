@@ -30,7 +30,7 @@ Status key: `[x]` done and pushed, `[ ]` not started, `[~]` partly done (see not
 
 ## D. Docs
 
-- [ ] **D1.** README updated with the new controls and mechanics. This file updated with what got done.
+- [x] **D1.** README updated with the new controls and mechanics. This file updated with what got done.
 
 ## Stretch (only if budget is left)
 
