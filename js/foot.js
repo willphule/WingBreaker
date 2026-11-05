@@ -49,6 +49,7 @@
 
   class Foot {
     constructor(mission, stats) {
+      this.combo = new G.Combo();
       this.m = mission;
       this.st = stats;
       this.v = new G.Vitals(stats, mission);
@@ -220,7 +221,8 @@
     }
 
     // ---------- Update ----------
-    update(dt) {
+    update(rdt) {
+      const dt = this.combo.step(rdt);
       this.t += dt;
       this.phaseT += dt;
       G.radio.update(dt);
@@ -584,12 +586,14 @@
       G.audio.play('hit');
       if (e.hp <= 0) {
         this.kills++;
+        const mul = this.combo.kill();
+        this.combo.freeze(e.kind === 'heavy' ? 0.08 : 0.035);
         e.deadT = 0;
         this.fx.burst(e.x, e.y - 12, e.col, 14, 200, 20);
         G.audio.play('boom');
         if (this.st.perks.has('leech')) this.v.addShield(6);
         if (this.st.perks.has('resupply') && Math.random() < 0.15) this.nades++;
-        for (let i = 0; i < 2; i++) this.pickups.push({ kind: 'scrap', x: e.x + U.rand(-10, 10), y: e.y + U.rand(-10, 10), value: (e.scrap / 2) * this.st.scrapMult });
+        for (let i = 0; i < 2; i++) this.pickups.push({ kind: 'scrap', x: e.x + U.rand(-10, 10), y: e.y + U.rand(-10, 10), value: (e.scrap / 2) * this.st.scrapMult * mul });
         if (Math.random() < (e.kind === 'heavy' ? 0.35 : 0.05)) this.pickups.push({ kind: 'cache', x: e.x, y: e.y });
       }
     }
@@ -616,6 +620,7 @@
         this.fx.burst(c.x, c.y - 20, '#ff4d5e', 40, 380, 50, 0.9);
         G.audio.play('bigboom');
         G.shake(14);
+        this.combo.freeze(0.14);
         this.scrap += 25 * this.st.scrapMult;
         this.pickups.push({ kind: 'cache', x: c.x, y: c.y + 30 });
         const left = this.cores.filter((q) => q.hp > 0).length;
@@ -642,7 +647,9 @@
     }
 
     playerHit(dmg) {
+      const hull = this.v.hull;
       const r = this.v.hit(dmg, 0.12);
+      if (this.v.hull < hull) this.combo.freeze(0.05);
       if (r === 'dead' && this.phase !== 'dead') {
         this.phase = 'dead';
         this.phaseT = 0;
@@ -656,7 +663,7 @@
       if (this.result) return;
       this.result = G.makeResult({
         success, bonus: this.bonusDone, kills: this.kills, enemies: Math.max(1, this.enemies), damageTaken: this.v.damageTaken,
-        maxHp: this.v.maxHull + this.v.maxShield, time: this.t, scrap: Math.round(this.scrap), caches: this.caches,
+        maxHp: this.v.maxHull + this.v.maxShield, time: this.t, bestChain: this.combo.best, scrap: Math.round(this.scrap), caches: this.caches,
       });
     }
 
@@ -957,6 +964,7 @@
 
     drawHUD(ctx, ox, oy) {
       G.hud.vitals(ctx, this.v);
+      this.combo.draw(ctx);
       G.hud.scoreBox(ctx, this.scrap, `KILLS ${this.kills}` + (this.caches ? `  ·  CACHES ${this.caches}` : ''));
       G.hud.objective(ctx, this.m.bonus.text, Math.min(this.intel, 3), 3, this.bonusDone);
       const left = this.cores.filter((c) => c.hp > 0).length;

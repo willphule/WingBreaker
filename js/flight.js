@@ -206,6 +206,36 @@
       this.nextGust = 14;
       this.lowHullWarned = false;
       this.timers = [];
+      // Time control (hit-stop, slow motion), kill chains, close calls and the WINGBREAK meter.
+      this.hasBreak = true;
+      this.shipModel = MD.shipPaint(G.save.data.paint);
+      this.sortie = !!mission.sortie;
+      this.wave = 1;
+      this.score = 0;
+      this.bossKey = null;
+      this.sortieBest = this.sortie ? ((G.save.data.sortie && G.save.data.sortie.best[mission.sector]) || 0) : 0;
+      this.ts = 1;
+      this.hitStop = 0;
+      this.slowT = 0;
+      this.slowScale = 1;
+      this.chain = 0;
+      this.chainT = 0;
+      this.bestChain = 0;
+      this.grazes = 0;
+      this.grazeCD = 0;
+      this.brk = 0;
+      this.brkReady = false;
+      this.brkTold = false;
+      this.wb = 0;
+      this.breaks = 0;
+      this.speedFx = 0;
+      this.boostT = 0;
+      this.fovKick = 0;
+      this.muzzle = 0;
+      this.warnT = 0;
+      this.beepT = 0;
+      this.trails = [[], []];
+      this.speedLines = Array.from({ length: 46 }, () => ({ a: U.rand(0, Math.PI * 2), r: U.rand(0.1, 1.3), sp: U.rand(0.8, 1.6), len: U.rand(0.05, 0.12) }));
       // Escort missions: a friendly carrier flies ahead and the raiders shoot at it.
       this.friend = this.th.escort ? { x: 0, y: 4, z: 34, hp: 700, max: 700, fireCD: 2, t: 0, flash: 0, dead: false, warned: false } : null;
       this.view = { F, cx: G.W / 2, cy: G.H * 0.47, camX: 0, camY: 1.6, fogColor: U.hex(this.th.fog), fogStart: this.th.fogStart, fogEnd: FAR };
@@ -217,7 +247,8 @@
       this.initDecor();
       G.radio.clear();
       G.popups.clear();
-      for (const [who, line] of this.th.intro) G.radio.say(who, line, 3.8);
+      const intro = this.sortie ? [['harrow', `Endless sortie, ${mission.name.replace(' Sortie', '')}. No objective this time. Stay alive and run up the score.`], ['vesk', 'Every wave ends with something big, and it will not be the same thing twice.']] : this.th.intro;
+      for (const [who, line] of intro) G.radio.say(who, line, 3.8);
       G.audio.music(this.th.music);
     }
 
@@ -228,13 +259,13 @@
       const len = th.length;
       let t = 2;
       while (t < len) {
-        const diff = t / len;
-        const choices = th.patterns.filter((p) => (p[2] || 0) <= t).map((p) => [p[0], p[1]]);
+        const diff = Math.min(1, t / len + (this.wave - 1) * 0.15);
+        const choices = th.patterns.filter((p) => (p[2] || 0) <= t + (this.wave > 1 ? 99 : 0)).map((p) => [p[0], p[1]]);
         const name = U.weighted(choices);
         ev.push({ t, kind: 'pattern', name, diff });
         t += PATTERNS[name].gap * (1.05 - diff * 0.32) + U.rand(0, 0.7);
       }
-      th.bonusTimes.forEach((bt, i) => {
+      (this.sortie ? [] : th.bonusTimes).forEach((bt, i) => {
         ev.push({ t: bt, kind: 'bonus', i });
         // Keep the bonus target's airspace clear of obstacle patterns.
         for (const e of ev) if (e.kind === 'pattern' && Math.abs(e.t - bt) < 1.4 && PATTERNS[e.name].solid) e.t = bt + 1.6;
@@ -348,6 +379,13 @@
         G.audio.play('rail');
         G.shake(2);
       }
+      if (this.wb > 0) {
+        // WINGBREAK: two extra gold streams from the wingtips.
+        const d = this.aimDir(p.x, p.y, PZ, assist);
+        for (const s of [-1, 1]) mk(p.x + s * 1.1, p.y - 0.2, { x: d.x + s * 0.02, y: d.y }, 200, { col: '#ffd37a', r: 0.38, pierce: st.pierce + 1, dmg: dmg * 0.8 });
+      }
+      this.muzzle = 0.06;
+      this.muzzleX = st.arch === 'repeater' ? (p.gun ? 1.55 : -1.55) : 0;
     }
 
     fireSecondary() {
@@ -412,8 +450,21 @@
       const big = e.kind === 'gunship' || e.kind === 'frigate' || e.bossPart;
       this.explosion(e.x, e.y + (e.hitY || 0), e.z, big ? 2.4 : 1.2, big ? '#ffb347' : '#ff7a3d');
       G.audio.play(big ? 'bigboom' : 'boom');
-      if (big) G.shake(8);
-      if (e.countKill) this.kills++;
+      if (big) {
+        G.shake(8);
+        this.hitStop = Math.max(this.hitStop, 0.06);
+      }
+      if (e.countKill) {
+        this.kills++;
+        this.chain = this.chainT > 0 ? this.chain + 1 : 1;
+        this.chainT = 2.4;
+        this.bestChain = Math.max(this.bestChain, this.chain);
+        this.addBreak((big ? 0.08 : 0.025) + Math.min(this.chain, 10) * 0.004);
+        if (this.chain >= 2) G.audio.play('chain', this.chain);
+        if (this.chain >= 5 && this.chain % 5 === 0) G.popups.add(G.W / 2, G.H * 0.28, `CHAIN x${this.chain}!`, '#ffd37a', 24, 1);
+      }
+      const chainMul = this.chainMul();
+      if (e.countKill && this.sortie) this.score += Math.round(Math.max(5, e.scrapV || 0) * 10 * chainMul * (1 + (this.wave - 1) * 0.25));
       if (this.st.perks.has('leech')) this.v.addShield(6);
       if (this.st.perks.has('resupply') && Math.random() < 0.18 && this.ammo < this.maxAmmo) {
         this.ammo++;
@@ -421,7 +472,7 @@
       }
       const n = Math.min(5, Math.max(1, Math.round((e.scrapV || 0) / 5)));
       for (let i = 0; i < n && e.scrapV; i++) {
-        this.add({ type: 'pickup', kind: 'scrap', x: e.x + U.rand(-1, 1), y: e.y + (e.hitY || 0) + U.rand(-1, 1), z: e.z + U.rand(-1, 1), vz: -this.S * 0.5, vx: U.rand(-3, 3), vy: U.rand(-3, 3), value: (e.scrapV / n), auto: true, r: 0.5 });
+        this.add({ type: 'pickup', kind: 'scrap', x: e.x + U.rand(-1, 1), y: e.y + (e.hitY || 0) + U.rand(-1, 1), z: e.z + U.rand(-1, 1), vz: -this.S * 0.5, vx: U.rand(-3, 3), vy: U.rand(-3, 3), value: (e.scrapV / n) * chainMul, auto: true, r: 0.5 });
       }
       if (Math.random() < (e.cacheChance || 0)) this.add({ type: 'pickup', kind: 'cache', x: e.x, y: e.y + (e.hitY || 0), z: e.z, vz: -this.S * 0.6, auto: true, r: 0.8 });
       if (e.kind === 'cage') {
@@ -464,21 +515,193 @@
         this.parts.push({ x, y, z, vx: U.rand(-10, 10) * scale, vy: U.rand(-4, 12) * scale, vz: U.rand(-8, 8) - this.S * 0.4, life: U.rand(0.5, 1.1), max: 1.1, size: 0.25 * scale + 0.1, col: '#28252e', grav: 25, drag: 0.98 });
       }
       this.parts.push({ x, y, z, vx: 0, vy: 0, vz: -this.S * 0.3, life: 0.25, max: 0.25, size: 4 * scale, col: '#fff2c0', glow: true, drag: 1 });
+      // Shockwave ring, tumbling debris and smoke that hangs in the air.
+      const vz = -this.S * 0.4;
+      this.parts.push({ x, y, z, vx: 0, vy: 0, vz, life: 0.45, max: 0.45, size: 3.4 * scale, col, ring: true, drag: 1 });
+      if (scale >= 2) this.parts.push({ x, y, z, vx: 0, vy: 0, vz, life: 0.75, max: 0.75, size: 6 * scale, col: '#fff2c0', ring: true, drag: 1 });
+      for (let i = 0; i < 3 + scale * 2; i++) {
+        this.parts.push({ x, y, z, vx: U.rand(-9, 9) * scale, vy: U.rand(-3, 11) * scale, vz: U.rand(-6, 6) + vz, life: U.rand(0.6, 1.2), max: 1.2, size: U.rand(0.3, 0.55) * Math.sqrt(scale), col: U.pick(['#4a4f5e', '#6b7080', '#2e2b33', '#8a5a3a']), shard: true, rot: U.rand(0, 6), rotV: U.rand(-14, 14), grav: 22, drag: 0.985 });
+      }
+      for (let i = 0; i < 2 + scale * 1.5; i++) {
+        this.parts.push({ x: x + U.rand(-1, 1) * scale, y: y + U.rand(-1, 1) * scale, z: z + U.rand(-1, 1), vx: U.rand(-1.5, 1.5), vy: U.rand(0.5, 2.5), vz: -this.S * 0.55, life: U.rand(0.9, 1.6), max: 1.6, size: U.rand(1.1, 1.9) * scale, smoke: true, col: '#2a2730', drag: 0.97 });
+      }
+    }
+    smoke(x, y, z, size, vz) {
+      this.parts.push({ x: x + U.rand(-0.5, 0.5), y: y + U.rand(-0.4, 0.4), z, vx: U.rand(-1, 1), vy: U.rand(1.5, 3.5), vz, life: U.rand(0.6, 1.0), max: 1.0, size: size * U.rand(0.7, 1.2), smoke: true, col: '#2c2a31', drag: 0.97 });
+    }
+
+    // ---------- Endless Sortie ----------
+    nextWave() {
+      const bonus = 2500 * this.wave;
+      this.score += bonus;
+      this.wave++;
+      this.m.stage = Math.min(6, this.m.stage + 1);
+      this.diffMul = U.clamp(1 + (this.wave - 1) * 0.15, 1, 2.4);
+      this.phase = 'play';
+      this.phaseT = 0;
+      this.lt = 0;
+      this.si = 0;
+      this.script = this.buildScript();
+      // Each new wave ends with a different boss from the last one.
+      const last = this.bossKey || this.th.boss;
+      this.bossKey = U.pick(Object.keys(BOSSES).filter((k) => k !== last));
+      this.v.heal(this.v.maxHull * 0.25);
+      this.ammo = Math.min(this.maxAmmo, this.ammo + Math.ceil(this.maxAmmo / 2));
+      G.audio.music(this.th.music);
+      G.popups.add(G.W / 2, G.H * 0.4, `WAVE ${this.wave - 1} CLEAR  +${U.fmt(bonus)}`, '#ffd37a', 22, 2.2);
+      G.radio.say('harrow', `Wave ${this.wave} inbound. Hull patched and ordnance topped up. Keep it going.`, 3.2, true);
+    }
+
+    // ---------- Chains, close calls and WINGBREAK ----------
+    chainMul() {
+      return 1 + Math.min(this.chain, 20) * 0.05;
+    }
+    addBreak(n) {
+      if (this.wb > 0) return;
+      this.brk = Math.min(1, this.brk + n);
+      if (this.brk >= 1 && !this.brkReady) {
+        this.brkReady = true;
+        G.audio.play('breakReady');
+        G.popups.add(G.W / 2, G.H - 58, 'WINGBREAK READY', '#ffd37a', 16, 1.2);
+        if (!this.brkTold) {
+          this.brkTold = true;
+          G.radio.say('juno', 'Your break drive is charged! Hit it when things get ugly!', 2.8);
+        }
+      }
+    }
+    graze() {
+      this.grazes++;
+      if (this.sortie) this.score += 50 * this.wave;
+      this.addBreak(0.05);
+      this.v.addShield(3);
+      G.audio.play('graze');
+      if (this.grazeCD <= 0) {
+        this.grazeCD = 0.45;
+        const sp = R.project(this.view, this.p.x, this.p.y + 1.4, PZ);
+        if (sp) G.popups.add(sp.x, sp.y - 20, 'CLOSE CALL', '#9fe8ff', 13, 0.6);
+      }
+    }
+    wingbreak() {
+      this.brk = 0;
+      this.brkReady = false;
+      this.wb = 6;
+      this.breaks++;
+      this.hitStop = 0.16;
+      this.fovKick = 1;
+      this.flashT = Math.max(this.flashT, 0.25);
+      const p = this.p;
+      this.parts.push({ x: p.x, y: p.y, z: PZ, vx: 0, vy: 0, vz: 0, life: 0.6, max: 0.6, size: 9, col: '#ffd37a', ring: true, drag: 1 });
+      this.parts.push({ x: p.x, y: p.y, z: PZ + 2, vx: 0, vy: 0, vz: 0, life: 0.9, max: 0.9, size: 16, col: '#fff2c0', ring: true, drag: 1 });
+      G.audio.play('wingbreak');
+      G.shake(10);
+      const lines = [['vesk', 'There it is! Break them!'], ['juno', 'Break drive engaged! Go, go, go!'], ['harrow', 'All yours, Wingbreaker. Make it count.']];
+      const ln = U.pick(lines);
+      G.radio.say(ln[0], ln[1], 2.2, true);
+    }
+    breakBurst() {
+      // The drive vents as a shockwave that wipes enemy shots and hurts everything close ahead.
+      const p = this.p;
+      for (const b of this.eb) this.spark(b.x, b.y, b.z, '#ffd37a');
+      this.eb.length = 0;
+      const dmg = 45 * this.dmgOut;
+      for (const e of this.ents) {
+        if (e.type !== 'enemy' || e.hp <= 0 || e.shielded) continue;
+        if (e.z > PZ && e.z < PZ + 60 && Math.hypot(e.x - p.x, e.y - p.y) < 22) this.damage(e, dmg, e.x, e.y + (e.hitY || 0), e.z);
+      }
+      this.parts.push({ x: p.x, y: p.y, z: PZ + 1, vx: 0, vy: 0, vz: 0, life: 0.7, max: 0.7, size: 20, col: '#ffd37a', ring: true, drag: 1 });
+      this.flashT = Math.max(this.flashT, 0.3);
+      this.fovKick = 0.7;
+      G.audio.play('breakEnd');
+      G.shake(8);
+    }
+    // A point on the ship model in world space, using the same rotations as the renderer.
+    shipPoint(lx, ly, lz) {
+      const p = this.p;
+      const rz = p.roll + p.spin, rx = -p.pitch, ry = p.vx * 0.015;
+      const x = lx * SHIP_SC, y = ly * SHIP_SC, z = lz * SHIP_SC;
+      const x1 = x * Math.cos(rz) - y * Math.sin(rz), y1 = x * Math.sin(rz) + y * Math.cos(rz);
+      const y2 = y1 * Math.cos(rx) - z * Math.sin(rx), z2 = y1 * Math.sin(rx) + z * Math.cos(rx);
+      const x3 = x1 * Math.cos(ry) + z2 * Math.sin(ry), z3 = -x1 * Math.sin(ry) + z2 * Math.cos(ry);
+      return [x3 + p.x, y2 + p.y, z3 + p.z];
+    }
+
+    updatePolish(dt, rdt) {
+      const p = this.p;
+      if (this.chainT > 0) {
+        this.chainT -= dt;
+        if (this.chainT <= 0) this.chain = 0;
+      }
+      this.grazeCD -= rdt;
+      this.muzzle = Math.max(0, this.muzzle - rdt);
+      this.warnT = Math.max(0, this.warnT - rdt);
+      this.boostT = Math.max(0, this.boostT - rdt);
+      if (this.wb > 0) {
+        this.wb -= rdt;
+        this.v.invuln = Math.max(this.v.invuln, 0.25);
+        if (this.wb <= 0) {
+          this.wb = 0;
+          if (this.phase === 'play' || this.phase === 'boss') this.breakBurst();
+        }
+      }
+      if (this.v.hull > 0 && this.v.hull < this.v.maxHull * 0.3 && this.phase !== 'dead' && this.phase !== 'outro') {
+        this.beepT -= rdt;
+        if (this.beepT <= 0) {
+          G.audio.play('lowhull');
+          this.beepT = 1.2;
+        }
+      }
+      // A wider field of view for a moment makes the world rush past.
+      this.fovKick = U.damp(this.fovKick, 0, 2.6, rdt);
+      this.view.F = F * (1 - 0.16 * this.fovKick);
+      const target = 0.22 + (this.wb > 0 ? 0.9 : 0) + (this.boostT > 0 ? 0.6 : 0) + (this.phase === 'outro' ? 1 : 0);
+      this.speedFx = U.damp(this.speedFx, Math.min(1.2, target), 4, rdt);
+      const rush = 0.5 + this.speedFx * 1.8;
+      for (const s of this.speedLines) {
+        s.r += s.sp * rdt * (0.25 + s.r) * rush;
+        if (s.r > 1.4) {
+          s.r = U.rand(0.12, 0.35);
+          s.a = U.rand(0, Math.PI * 2);
+        }
+      }
+      // Wingtip vapour trails when banking hard, rolling or breaking.
+      const k = this.phase === 'dead' ? 0 : U.clamp((Math.abs(p.roll) - 0.3) / 0.4, 0, 1) + (p.dodgeT > 0 ? 1 : 0) + (this.wb > 0 ? 0.7 : 0);
+      for (let s = 0; s < 2; s++) {
+        const tr = this.trails[s];
+        for (const q of tr) {
+          q.z -= this.S * dt;
+          q.age += dt;
+        }
+        while (tr.length && (tr[0].age > 0.4 || tr[0].z < 1)) tr.shift();
+        const w = this.shipPoint(s ? -2.7 : 2.7, -0.2, -1.5);
+        tr.push({ x: w[0], y: w[1], z: w[2], a: Math.min(1, k), age: 0 });
+      }
     }
     spark(x, y, z, col = '#ffd37a') {
       for (let i = 0; i < 5; i++) this.parts.push({ x, y, z, vx: U.rand(-8, 8), vy: U.rand(-8, 8), vz: U.rand(-8, 8) - this.S * 0.5, life: 0.25, max: 0.25, size: 0.4, col, glow: true, drag: 0.9 });
     }
 
     // ---------- Update ----------
-    update(dt) {
+    update(rdt) {
+      // Time control: hit-stop freezes the action for a few frames, slow motion eases back out,
+      // and during WINGBREAK the world slows down but the ship and its shots do not.
+      this.hitStop = Math.max(0, this.hitStop - rdt);
+      this.slowT = Math.max(0, this.slowT - rdt);
+      let ts = 1;
+      if (this.slowT > 0) ts = U.lerp(1, this.slowScale, U.clamp(this.slowT / 0.6, 0, 1));
+      if (this.wb > 0) ts = Math.min(ts, 0.5);
+      if (this.hitStop > 0) ts = 0.05;
+      if (this.phase === 'dead') ts *= 0.45;
+      this.ts = ts;
+      const dt = rdt * ts;
+      const pdt = this.wb > 0 && this.hitStop <= 0 ? rdt : dt;
+      G.audio.muffle(this.phase === 'dead' || ts < 0.4 ? 1 : this.wb > 0 ? 0.5 : 0);
       this.t += dt;
-      this.phaseT += dt;
+      this.phaseT += this.phase === 'dead' ? rdt : dt;
       const p = this.p;
       const V = this.view;
-      if (this.phase === 'dead') dt *= 0.45;
       this.dist += this.S * dt;
-      G.radio.update(dt);
-      G.popups.update(dt);
+      G.radio.update(rdt);
+      G.popups.update(rdt);
 
       if (this.phase === 'intro') {
         p.z = U.lerp(-6, PZ, U.clamp(this.phaseT / 1.6, 0, 1) ** 0.6);
@@ -492,7 +715,7 @@
         while (this.si < this.script.length && this.script[this.si].t <= this.lt) this.runEvent(this.script[this.si++]);
       }
 
-      if (this.phase !== 'dead' && this.phase !== 'outro') this.updatePlayer(dt);
+      if (this.phase !== 'dead' && this.phase !== 'outro') this.updatePlayer(pdt);
       if (this.phase === 'outro') {
         p.z += dt * (10 + this.phaseT * 40);
         p.y = U.damp(p.y, 2, 2, dt);
@@ -503,7 +726,7 @@
       this.v.update(dt);
       this.updateWeather(dt);
       this.updateEnts(dt);
-      this.updateBolts(dt);
+      this.updateBolts(pdt);
       this.updateEnemyBullets(dt);
       this.updateParts(dt);
       if (this.boss) this.updateBoss(dt);
@@ -516,6 +739,7 @@
         }
       }
       this.timers = this.timers.filter((tm) => !tm.done);
+      this.updatePolish(dt, rdt);
 
       // Camera follows the ship loosely and rolls with it.
       V.camX = U.damp(V.camX, p.x * 0.7, 6, dt);
@@ -554,10 +778,11 @@
         G.audio.play('dodge');
         if (st.perks.has('reflex')) this.v.addShield(12);
       }
+      if (I.pressed('special') && this.brk >= 1 && this.wb <= 0 && (this.phase === 'play' || this.phase === 'boss')) this.wingbreak();
       if (this.phase !== 'intro') {
         if (I.down('fire') && p.fireCD <= 0) {
           this.firePrimary();
-          p.fireCD = 1 / st.primary.rate;
+          p.fireCD = 1 / st.primary.rate / (this.wb > 0 ? 2 : 1);
         }
         if (I.pressed('alt') && p.altCD <= 0) this.fireSecondary();
       }
@@ -689,6 +914,11 @@
         if (e.ai && AI[e.ai]) AI[e.ai](this, e, dt);
         e.x += e.vx * dt;
         e.y += e.vy * dt;
+        // Badly damaged heavies trail smoke so you can see what is nearly dead.
+        if (e.type === 'enemy' && e.hp > 0 && e.maxHp >= 50 && e.hp < e.maxHp * 0.5 && !e.shielded && Math.random() < dt * 16) {
+          this.smoke(e.x, e.y + (e.hitY || 0) + (e.col ? e.col[0].y : 0), e.z, 0.9 * (e.sc || 1), e.vz * 0.5 - 4);
+          if (Math.random() < 0.2) this.spark(e.x, e.y + (e.hitY || 0), e.z, '#ffb347');
+        }
         const oz = e.z;
         e.z += e.vz * dt;
         if (!e.bossPart && (e.z < -6 || e.z > FAR + 60 || Math.abs(e.x) > 120 || e.y > 80)) e.dead = true;
@@ -701,6 +931,8 @@
             const d = Math.hypot(p.x - e.x, p.y - e.y);
             if (d < e.rad) {
               G.audio.play('ring');
+              this.boostT = 0.9;
+              this.fovKick = Math.max(this.fovKick, 0.6);
               if (e.bonus) this.bonusHit(e);
               else {
                 this.v.addShield(15);
@@ -797,8 +1029,10 @@
     }
 
     playerHit(dmg, inv = 0.15) {
+      const hull = this.v.hull;
       const r = this.v.hit(dmg * (0.85 + this.m.stage * 0.06), inv);
       if (r === 'dead') this.die();
+      else if (this.v.hull < hull) this.hitStop = Math.max(this.hitStop, 0.05);
     }
 
     die() {
@@ -943,11 +1177,17 @@
               b.dead = true;
               this.bolts.push({ x: b.x, y: b.y, z: PZ + 0.8, vx: -b.vx, vy: -b.vy, vz: 120, dmg: 20, pierce: 0, col: '#ffd37a', life: 1.2, r: 0.5, kind: 'bolt', chained: true });
               G.audio.play('shieldHit');
+              this.addBreak(0.04);
             } else {
               b.dead = true;
               this.playerHit(b.dmg);
             }
           }
+        }
+        // A shot that slips past close without hitting is a close call.
+        if (!b.dead && !b.grazed && oz >= PZ - 0.6 && b.z < PZ - 0.6 && this.wb <= 0) {
+          b.grazed = true;
+          if (Math.hypot(b.x - p.x, b.y - p.y) < 2.8 + b.r * 0.5) this.graze(b);
         }
         if (b.z < -1 || b.life <= 0) b.dead = true;
       }
@@ -961,17 +1201,18 @@
         q.vx *= d;
         q.vy *= d;
         if (q.grav) q.vy -= q.grav * dt;
+        if (q.rotV) q.rot += q.rotV * dt;
         q.x += q.vx * dt;
         q.y += q.vy * dt;
         q.z += q.vz * dt;
       }
       this.parts = this.parts.filter((q) => q.life > 0 && q.z > 0.5);
-      if (this.parts.length > 700) this.parts.splice(0, this.parts.length - 700);
+      if (this.parts.length > 900) this.parts.splice(0, this.parts.length - 900);
     }
 
     // ---------- Boss ----------
     spawnBoss() {
-      const def = BOSSES[this.th.boss];
+      const def = BOSSES[this.bossKey || this.th.boss];
       const mul = 1 + (this.m.stage - 1) * 0.08;
       this.phase = 'boss';
       const B = (this.boss = { def, x: 0, y: def.y, z: FAR + 20, t: 0, state: 'enter', parts: [], core: null, deathT: 0, yOff: def.rise || 0 });
@@ -984,7 +1225,9 @@
       B.core = this.add({ type: 'enemy', kind: 'bosscore', model: MD[cd.model], x: 0, y: 0, z: B.z, vz: 0, ry: Math.PI, hp: Math.round(cd.hp * mul), r: cd.r, d: 2.2, bossPart: true, isCore: true, pd: cd, shielded: def.parts.length > 0, fireCD: 4, fire2CD: 6, ai: null, cacheChance: 1, scrapV: 60, sc: 1 });
       B.maxHp = B.parts.reduce((s, e) => s + e.maxHp, 0) + B.core.maxHp;
       G.audio.music('boss');
-      G.audio.play('alarm');
+      G.audio.play('klaxon');
+      this.timers.push({ t: 0.8, fn: () => G.audio.play('klaxon') }, { t: 1.6, fn: () => G.audio.play('klaxon') });
+      this.warnT = 3.2;
       G.radio.say(def.line[0], def.line[1], 4, true);
     }
 
@@ -1051,6 +1294,10 @@
           this.flashT = 0.5;
           if (B.body) B.body.dead = true;
           this.boss = null;
+          if (this.sortie) {
+            this.nextWave();
+            return;
+          }
           this.phase = 'outro';
           this.phaseT = 0;
           G.audio.music('victory');
@@ -1190,7 +1437,7 @@
       const p = this.p;
       const x = e.x, y = e.y + (e.hitY || 0), z = e.z - 1.5;
       if (f.kind === 'aimed') {
-        for (let i = 0; i < f.n; i++) setTimeout(() => !e.dead && this.phase !== 'dead' && this.shoot(e.x, e.y, e.z - 1.5, 40), i * 140);
+        for (let i = 0; i < f.n; i++) this.timers.push({ t: i * 0.14, fn: () => !e.dead && this.shoot(e.x, e.y, e.z - 1.5, 40) });
       } else if (f.kind === 'spread') {
         for (let i = 0; i < f.n; i++) this.shoot(x, y, z, 32, (i - (f.n - 1) / 2) * 2.6, 0);
       } else if (f.kind === 'ring') {
@@ -1234,6 +1481,11 @@
       if (e.isCore) {
         B.state = 'dying';
         B.deathT = 0;
+        // Slow the world right down for the kill.
+        this.hitStop = 0.2;
+        this.slowT = 2.6;
+        this.slowScale = 0.3;
+        this.fovKick = 0.8;
         for (const q of B.parts) q.dead = true;
         this.eb.length = 0;
         return;
@@ -1249,7 +1501,7 @@
       if (this.result) return;
       if (this.friend) this.bonusDone = !this.friend.dead && this.friend.hp >= this.friend.max * 0.5;
       this.result = G.makeResult({
-        success,
+        success: this.sortie ? true : success,
         bonus: this.bonusDone,
         kills: this.kills,
         enemies: Math.max(1, this.enemies),
@@ -1258,6 +1510,12 @@
         time: this.t,
         scrap: Math.round(this.scrap),
         caches: this.caches,
+        bestChain: this.bestChain,
+        sortie: this.sortie,
+        score: this.score,
+        wave: this.wave,
+        grazes: this.grazes,
+        breaks: this.breaks,
       });
     }
 
@@ -1314,12 +1572,48 @@
         }
         ctx.stroke();
       }
+      this.drawSpeedLines(ctx);
       ctx.restore();
       if (this.flashT > 0) {
         ctx.fillStyle = `rgba(220,230,255,${this.flashT * 0.8})`;
         ctx.fillRect(0, 0, G.W, G.H);
       }
+      if (this.wb > 0) {
+        // Gold edge glow while WINGBREAK is running.
+        const a = Math.min(1, this.wb * 2) * (0.22 + Math.sin(this.t * 14) * 0.05);
+        const grd = ctx.createRadialGradient(G.W / 2, G.H / 2, G.H * 0.4, G.W / 2, G.H / 2, G.H * 0.95);
+        grd.addColorStop(0, 'rgba(255,200,80,0)');
+        grd.addColorStop(1, `rgba(255,190,70,${a})`);
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, G.W, G.H);
+      }
       this.drawHUD(ctx);
+    }
+
+    drawSpeedLines(ctx) {
+      const f = this.speedFx;
+      if (f < 0.05) return;
+      const V = this.view;
+      const gold = this.wb > 0;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = gold ? '#ffd37a' : '#ffffff';
+      ctx.lineCap = 'round';
+      const sx = G.W * 0.62, sy = G.H * 0.62;
+      for (const s of this.speedLines) {
+        if (s.r < 0.3) continue;
+        const a = Math.pow(f, 1.4) * Math.min(1, (s.r - 0.3) * 2.5) * 0.4;
+        if (a < 0.01) continue;
+        const c = Math.cos(s.a), sn = Math.sin(s.a);
+        const r2 = s.r + s.len * (1 + f * 2.5);
+        ctx.globalAlpha = a;
+        ctx.lineWidth = 1 + f * s.r * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(V.cx + c * s.r * sx, V.cy + sn * s.r * sy);
+        ctx.lineTo(V.cx + c * r2 * sx, V.cy + sn * r2 * sy);
+        ctx.stroke();
+      }
+      ctx.restore();
     }
 
     drawBackground(ctx) {
@@ -1788,16 +2082,55 @@
       const p = this.p;
       const V = this.view;
       if (p.z < R.NEAR + 0.5) return;
-      const blink = this.v.invuln > 0 && p.dodgeT <= 0 && Math.floor(this.t * 20) % 2 === 0;
-      if (blink) return;
-      R.drawModel(ctx, V, MD.ship, p.x, p.y, p.z, -p.pitch, p.vx * 0.015, p.roll + p.spin, SHIP_SC, { flash: this.v.flash > 0.2 ? 0.5 : 0 });
-      const tail = R.project(V, p.x, p.y, p.z - 0.9);
-      if (tail) {
-        ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
-        G.drawGlow(ctx, '#ffb347', tail.x, tail.y, 0.34 * tail.s * (0.9 + Math.random() * 0.2), 1);
-        ctx.restore();
+      // Wingtip vapour trails, drawn behind the ship.
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = this.wb > 0 ? '#ffd37a' : '#e8f4ff';
+      ctx.lineCap = 'butt';
+      for (const tr of this.trails) {
+        let prev = null;
+        for (let i = 0; i < tr.length; i++) {
+          const q = tr[i];
+          const sp = R.project(V, q.x, q.y, q.z);
+          if (sp && prev && q.a > 0.02) {
+            ctx.globalAlpha = q.a * (1 - q.age / 0.4) * 0.4;
+            ctx.lineWidth = Math.max(1, 0.09 * sp.s);
+            ctx.beginPath();
+            ctx.moveTo(prev.x, prev.y);
+            ctx.lineTo(sp.x, sp.y);
+            ctx.stroke();
+          }
+          prev = sp;
+        }
       }
+      ctx.restore();
+      const blink = this.v.invuln > 0 && p.dodgeT <= 0 && this.wb <= 0 && Math.floor(this.t * 20) % 2 === 0;
+      if (blink) return;
+      if (this.wb > 0) {
+        const c = R.project(V, p.x, p.y, p.z);
+        if (c) {
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          G.drawGlow(ctx, '#ffb347', c.x, c.y, 2.6 * c.s * (0.9 + Math.sin(this.t * 20) * 0.1), 0.45);
+          ctx.restore();
+        }
+      }
+      R.drawModel(ctx, V, this.shipModel, p.x, p.y, p.z, -p.pitch, p.vx * 0.015, p.roll + p.spin, SHIP_SC, { flash: this.v.flash > 0.2 ? 0.5 : 0 });
+      const tail = R.project(V, p.x, p.y, p.z - 0.9);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      if (tail) G.drawGlow(ctx, this.wb > 0 ? '#ffd37a' : '#ffb347', tail.x, tail.y, (this.wb > 0 ? 0.5 : 0.34) * tail.s * (0.9 + Math.random() * 0.2), 1);
+      if (this.muzzle > 0) {
+        const col = this.wb > 0 ? '#ffd37a' : WEAPON_COL[this.st.primary.arch];
+        const k = this.muzzle / 0.06;
+        const guns = this.wb > 0 ? [this.muzzleX, 2.3, -2.3] : [this.muzzleX];
+        for (const gx of guns) {
+          const w = this.shipPoint(gx, -0.15, 2.9);
+          const m = R.project(V, w[0], w[1], w[2]);
+          if (m) G.drawGlow(ctx, col, m.x, m.y, 0.4 * m.s * (0.7 + k * 0.5), 0.8 * k);
+        }
+      }
+      ctx.restore();
       if (this.v.shieldFlash > 0 && this.v.shield > 0) {
         const c = R.project(V, p.x, p.y, p.z);
         if (c) {
@@ -1875,6 +2208,19 @@
       if (!a) return;
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
+      // A short trail back along the shot's path makes its direction easy to read.
+      const tl = R.project(this.view, b.x - b.vx * 0.06, b.y - b.vy * 0.06, b.z - b.vz * 0.06);
+      if (tl) {
+        ctx.globalAlpha = 0.5;
+        ctx.strokeStyle = b.col;
+        ctx.lineCap = 'round';
+        ctx.lineWidth = Math.max(1.5, b.r * 0.9 * a.s);
+        ctx.beginPath();
+        ctx.moveTo(tl.x, tl.y);
+        ctx.lineTo(a.x, a.y);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
       G.drawGlow(ctx, b.col, a.x, a.y, Math.max(4, b.r * 2.4 * a.s), 1);
       ctx.restore();
       ctx.fillStyle = '#fff';
@@ -1887,6 +2233,44 @@
       const a = R.project(this.view, q.x, q.y, q.z);
       if (!a) return;
       const f = q.life / q.max;
+      if (q.ring) {
+        const rad = q.size * (0.15 + 0.85 * Math.sqrt(1 - f)) * a.s;
+        if (rad > 2000) return;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = f * 0.9;
+        ctx.strokeStyle = q.col;
+        ctx.lineWidth = Math.max(1, 0.45 * a.s * f);
+        ctx.beginPath();
+        ctx.ellipse(a.x, a.y, rad, rad * 0.62, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        return;
+      }
+      if (q.smoke) {
+        ctx.globalAlpha = Math.min(1, f * 1.6) * 0.34;
+        ctx.fillStyle = q.col;
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, Math.max(1, q.size * (0.5 + (1 - f) * 0.9) * a.s), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        return;
+      }
+      if (q.shard) {
+        const s = Math.max(1.5, q.size * a.s);
+        ctx.save();
+        ctx.translate(a.x, a.y);
+        ctx.rotate(q.rot);
+        ctx.globalAlpha = Math.min(1, f * 2);
+        ctx.fillStyle = q.col;
+        ctx.beginPath();
+        ctx.moveTo(-s, -s * 0.4);
+        ctx.lineTo(s, -s * 0.2);
+        ctx.lineTo(-s * 0.2, s * 0.7);
+        ctx.fill();
+        ctx.restore();
+        return;
+      }
       if (q.glow) {
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
@@ -1937,10 +2321,13 @@
         }
         // Behind-you warning
         const behind = this.ents.some((e) => e.ai === 'chaser' && e.z < PZ && e.hp > 0) || (this.boss && this.boss.pass === 'in' && this.boss.z < PZ + 4);
-        if (behind) G.text(ctx, '▼ BEHIND YOU ▼', G.W / 2, G.H - 30, { size: 16, align: 'center', color: Math.floor(this.t * 6) % 2 ? '#ff6b5e' : '#ffffff' });
+        if (behind) G.text(ctx, '▼ BEHIND YOU ▼', G.W / 2, G.H - 56, { size: 16, align: 'center', color: Math.floor(this.t * 6) % 2 ? '#ff6b5e' : '#ffffff' });
         ctx.restore();
       }
+      if (this.warnT > 0) this.drawWarning(ctx);
       G.hud.vitals(ctx, this.v);
+      this.drawChain(ctx);
+      if (this.phase !== 'intro' && this.phase !== 'outro' && this.phase !== 'dead') this.drawBreak(ctx);
       G.hud.scoreBox(ctx, this.scrap, `KILLS ${this.kills}` + (this.caches ? `  ·  CACHES ${this.caches}` : ''));
       if (this.friend) {
         const fr = this.friend;
@@ -1953,6 +2340,10 @@
           ctx.fillStyle = 'rgba(255,255,255,0.6)';
           ctx.fillRect(G.W / 2 - 1, 44, 2, 9);
         }
+      } else if (this.sortie) {
+        G.text(ctx, `WAVE ${this.wave}`, G.W / 2, 20, { size: 10, align: 'center', color: '#ffd37a', outline: false });
+        G.text(ctx, U.fmt(this.score), G.W / 2, 40, { size: 20, weight: 800, align: 'center', color: '#ffffff' });
+        if (this.sortieBest && !this.boss) G.text(ctx, `BEST ${U.fmt(Math.max(this.sortieBest, this.score))}`, G.W / 2, 55, { size: 10, align: 'center', color: this.score > this.sortieBest ? '#ffd37a' : '#8f98b3', outline: false });
       } else if (this.m.bonus) G.hud.objective(ctx, this.m.bonus.text, Math.min(this.bonusCount, this.bonusNeed), this.bonusNeed, this.bonusDone);
       if (this.boss && this.boss.state !== 'enter') {
         const B = this.boss;
@@ -1967,6 +2358,69 @@
       if (this.phase === 'outro') G.hud.banner(ctx, 'MISSION COMPLETE', '#ffd37a');
       if (this.phase === 'dead') G.hud.banner(ctx, 'SHIP LOST', '#ff6b5e');
       G.input.drawTouch(ctx);
+    }
+
+    // Boss arrival: letterbox bars and a strobing warning band.
+    drawWarning(ctx) {
+      const T = 3.2, e = T - this.warnT;
+      const k = Math.min(1, e * 3, this.warnT * 2);
+      const bh = 40 * k;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, G.W, bh);
+      ctx.fillRect(0, G.H - bh, G.W, bh);
+      const y = G.H * 0.3;
+      const on = Math.floor(e * 5) % 2 === 0;
+      ctx.save();
+      ctx.globalAlpha = k;
+      ctx.fillStyle = on ? 'rgba(255,40,60,0.3)' : 'rgba(255,40,60,0.12)';
+      ctx.fillRect(0, y - 34, G.W, 68);
+      ctx.fillStyle = 'rgba(255,70,80,0.85)';
+      const off = (e * 90) % 36;
+      for (let x = -36 + off; x < G.W + 36; x += 36) {
+        for (const yy of [y - 34, y + 28]) {
+          ctx.beginPath();
+          ctx.moveTo(x, yy);
+          ctx.lineTo(x + 16, yy);
+          ctx.lineTo(x + 10, yy + 6);
+          ctx.lineTo(x - 6, yy + 6);
+          ctx.fill();
+        }
+      }
+      G.text(ctx, 'WARNING', G.W / 2, y + 6, { size: 40, weight: 800, align: 'center', color: on ? '#ffffff' : '#ff9a9a', lw: 6 });
+      if (this.boss) G.text(ctx, this.boss.def.name + ' INBOUND', G.W / 2, y + 23, { size: 12, align: 'center', color: '#ffd0d0', outline: false });
+      ctx.restore();
+    }
+
+    drawChain(ctx) {
+      if (this.chain < 2) return;
+      const x = 16, y = 74;
+      const pop = Math.max(0, this.chainT - 2.1) * 3;
+      G.text(ctx, `CHAIN x${this.chain}`, x, y, { size: 18 + pop * 6, weight: 800, color: this.chain >= 10 ? '#ffd37a' : '#ffffff' });
+      G.hud.bar(ctx, x, y + 6, 120, 3, this.chainT / 2.4, '#ffd37a', 'rgba(255,211,122,0.15)');
+      G.text(ctx, `SCRAP x${this.chainMul().toFixed(2)}`, x, y + 22, { size: 11, color: '#ffd37a', outline: false });
+    }
+
+    drawBreak(ctx) {
+      const w = 220, x = (G.W - w) / 2, y = G.H - 20;
+      const full = this.brk >= 1;
+      const on = this.wb > 0;
+      ctx.fillStyle = 'rgba(6,10,22,0.6)';
+      ctx.fillRect(x - 64, y - 8, w + 72, 18);
+      G.text(ctx, 'BREAK', x - 10, y + 5, { size: 10, align: 'right', color: on || full ? '#ffd37a' : '#8f98b3', outline: false });
+      const frac = on ? this.wb / 6 : this.brk;
+      const pulse = full ? (Math.sin(this.t * 10) > 0 ? '#fff2c0' : '#ffd37a') : '#ffb347';
+      G.hud.bar(ctx, x, y - 3, w, 8, frac, on ? '#fff2c0' : pulse, 'rgba(255,179,71,0.12)', 4);
+      if (full || on) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        G.drawGlow(ctx, '#ffb347', x + w * frac, y + 1, 18, 0.5 + Math.sin(this.t * 10) * 0.2);
+        ctx.restore();
+      }
+      if (on) G.text(ctx, 'WINGBREAK', G.W / 2, y - 14, { size: 14, weight: 800, align: 'center', color: Math.floor(this.t * 8) % 2 ? '#ffd37a' : '#ffffff' });
+      else if (full) {
+        const key = I.device === 'touch' ? 'TAP BREAK' : I.device === 'pad' ? 'PRESS Y' : 'PRESS Q';
+        G.text(ctx, `${key} TO WINGBREAK`, G.W / 2, y - 14, { size: 13, align: 'center', color: '#ffd37a' });
+      }
     }
   }
 
@@ -2031,7 +2485,7 @@
         e.holdT = (e.holdT || 0) + dt;
         e.fireCD -= dt;
         if (e.fireCD <= 0) {
-          for (let i = 0; i < 3; i++) setTimeout(() => !e.dead && f.phase !== 'dead' && f.shoot(e.x + (i - 1) * 1.2, e.y - 0.5, e.z - 1.5, 36), i * 160);
+          for (let i = 0; i < 3; i++) f.timers.push({ t: i * 0.16, fn: () => !e.dead && f.shoot(e.x + (i - 1) * 1.2, e.y - 0.5, e.z - 1.5, 36) });
           e.fireCD = U.rand(2, 2.6) / f.diffMul;
         }
         if (e.holdT > 8) e.state = 'out';

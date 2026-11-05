@@ -110,5 +110,16 @@
     for (const m of order) if (C.available(save, m) && !save.progress.cleared[m.id] && m.stage <= 5) return m;
     return C.byId('crownfall');
   };
+  // Endless Sortie: fly a cleared flight sector in waves until the ship is lost.
+  C.sortieSectors = ['canyon', 'storm', 'frost', 'dock', 'caldera', 'crownfall', 'ace'];
+  C.sortie = function (sector) {
+    const base = C.byId(sector);
+    if (!base || C.sortieSectors.indexOf(sector) < 0) return null;
+    return {
+      id: 'sortie', sortie: true, sector, stage: 1, lane: 'C', name: base.name + ' Sortie', mode: 'flight', theme: base.theme,
+      power: G.gear.stats(G.save.data).power, eyebrow: 'ENDLESS SORTIE',
+      bonus: { text: 'Survive. Score. Go again.', count: 1 },
+    };
+  };
   C.modeName = { flight: 'Flight', bike: 'Speeder Chase', foot: 'On Foot', gauntlet: 'Gauntlet' };
 })();

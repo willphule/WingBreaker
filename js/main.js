@@ -31,7 +31,7 @@
 
   // ---------- Mission flow ----------
   G.startMission = function (id) {
-    const m = G.campaign.byId(id);
+    const m = typeof id === 'object' ? id : G.campaign.byId(id);
     const s = G.save.data;
     const st = G.gear.stats(s);
     G.mission = m;
@@ -40,7 +40,7 @@
     G.mode = G.modes[m.mode](m, st);
     G.state = 'mission';
     G.ui.hide();
-    s.progress.lastMission = id;
+    if (!m.sortie) s.progress.lastMission = m.id;
     G.save.write();
     I.consume();
     G.shakeAmt = 0;
@@ -48,11 +48,13 @@
   G.pause = function () {
     if (G.state !== 'mission') return;
     G.state = 'paused';
+    G.audio.muffle(1);
     G.ui.pause(G.mission);
   };
   G.resume = function () {
     G.ui.hide();
     G.state = 'mission';
+    G.audio.muffle(0);
     I.consume();
   };
   G.abandon = function () {
@@ -60,10 +62,16 @@
     G.state = 'menu';
     G.mode = null;
     G.radio.clear();
-    G.ui.map(m && m.id);
+    G.audio.muffle(0);
+    if (m && m.sortie) G.ui.sortie();
+    else G.ui.map(m && m.id);
   };
 
   function rankOf(res) {
+    if (res.sortie) {
+      const w = res.wave;
+      return { rank: w >= 5 ? 'S' : w >= 4 ? 'A' : w >= 3 ? 'B' : w >= 2 ? 'C' : 'D', score: 0 };
+    }
     if (!res.success) return { rank: 'D', score: 0 };
     const killR = U.clamp(res.kills / Math.max(1, res.enemies), 0, 1);
     const dmgR = U.clamp(res.damageTaken / Math.max(1, res.maxHp) / 1.5, 0, 1);
@@ -78,7 +86,7 @@
     const C = G.campaign;
     const st = G.gear.stats(s);
     const { rank } = rankOf(res);
-    const firstClear = res.success && !s.progress.cleared[m.id];
+    const firstClear = res.success && !m.sortie && !s.progress.cleared[m.id];
     let scrap = res.scrap;
     if (res.success) scrap += Math.round((60 + 25 * m.stage + { S: 120, A: 80, B: 40, C: 20, D: 0 }[rank]) * st.scrapMult);
     else scrap = Math.round(scrap * 0.5);
@@ -104,15 +112,26 @@
     s.scrap += scrap;
 
     const before = new Set(C.missions.filter((x) => C.available(s, x)).map((x) => x.id));
-    if (res.success) {
+    const sBefore = G.sRanks(s);
+    let newBest = false;
+    if (m.sortie) {
+      const so = (s.sortie = s.sortie || { best: {}, bestWave: {} });
+      if (res.score > (so.best[m.sector] || 0)) {
+        so.best[m.sector] = res.score;
+        newBest = true;
+      }
+      so.bestWave[m.sector] = Math.max(so.bestWave[m.sector] || 0, res.wave);
+    } else if (res.success) {
       s.progress.cleared[m.id] = true;
       if (res.bonus) s.progress.bonus[m.id] = true;
       const prev = s.progress.best[m.id];
       if (!prev || RANK_ORDER.indexOf(rank) > RANK_ORDER.indexOf(prev)) s.progress.best[m.id] = rank;
     }
     const unlocks = C.missions.filter((x) => C.available(s, x) && !before.has(x.id)).map((x) => x.name);
+    const paints = G.paints.filter((p) => p.need > sBefore && p.need <= G.sRanks(s)).map((p) => p.name);
     s.stats.missions++;
     if (m.mode !== 'gauntlet') s.stats.kills += res.kills;
+    if (res.bestChain) s.stats.bestChain = Math.max(s.stats.bestChain || 0, res.bestChain);
     if (!res.success) s.stats.deaths++;
     let ending = false;
     if (m.id === 'crownfall' && res.success && !s.progress.campaignDone) {
@@ -120,7 +139,7 @@
       ending = true;
     }
     G.save.write();
-    return { rank, scrap, items, unlocks, note, ending };
+    return { rank, scrap, items, unlocks, note, ending, newBest, paints };
   }
 
   function endMission(res) {
@@ -128,6 +147,7 @@
     G.state = 'menu';
     G.mode = null;
     G.radio.clear();
+    G.audio.muffle(0);
     const rw = rewards(m, res);
     G.lastResult = { res, rw };
     G.ui.results(m, res, rw);
@@ -159,10 +179,14 @@
       ctx.fillRect(p.x, p.y, Math.max(1, 2.2 - s.z / 50), Math.max(1, 2.2 - s.z / 50));
     }
     const scene = G.menuScene;
-    if (scene === 'title' || scene === 'results') {
+    if (scene === 'paint') {
+      // Paint Shop preview: the ship turns slowly on the right of the screen.
+      const t = G.time;
+      G.r3d.drawModel(ctx, V, G.models.shipPaint(G.save.data.paint), 5.6, -0.2 + Math.sin(t * 1.3) * 0.15, 11, 0.35, t * 0.6, Math.sin(t * 0.9) * 0.2, 1.35);
+    } else if (scene === 'title' || scene === 'results') {
       const t = G.time;
       const sx = scene === 'title' ? 4.2 : 5.4;
-      G.r3d.drawModel(ctx, V, G.models.ship, sx, -0.4 + Math.sin(t * 1.3) * 0.25, 12, 0.25 + Math.sin(t * 0.7) * 0.08, 2.5 + t * 0.35, Math.sin(t * 0.9) * 0.25, 1.15);
+      G.r3d.drawModel(ctx, V, G.models.shipPaint(G.save.data.paint), sx, -0.4 + Math.sin(t * 1.3) * 0.25, 12, 0.25 + Math.sin(t * 0.7) * 0.08, 2.5 + t * 0.35, Math.sin(t * 0.9) * 0.25, 1.15);
     }
   }
 
@@ -227,7 +251,8 @@
   G.audio.setMuted(st.muted);
   const q = new URLSearchParams(location.search);
   const direct = q.get('mission') || (location.hash.startsWith('#play-') ? location.hash.slice(6) : null);
-  if (direct && G.campaign.byId(direct)) G.startMission(direct);
+  if (direct && direct.startsWith('sortie-') && G.campaign.sortie(direct.slice(7))) G.startMission(G.campaign.sortie(direct.slice(7)));
+  else if (direct && G.campaign.byId(direct)) G.startMission(direct);
   else G.ui.title();
   requestAnimationFrame(frame);
   // Exposed for automated checks.

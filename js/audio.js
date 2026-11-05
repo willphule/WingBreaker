@@ -43,7 +43,12 @@
     A.sfxBus.connect(A.master);
     A.musicBus = c.createGain();
     A.musicBus.gain.value = A.musicVol * 0.55;
-    A.musicBus.connect(A.master);
+    // Music runs through a low-pass filter so slow motion, pause and death can muffle it.
+    A.musicFilter = c.createBiquadFilter();
+    A.musicFilter.type = 'lowpass';
+    A.musicFilter.frequency.value = 20000;
+    A.musicBus.connect(A.musicFilter);
+    A.musicFilter.connect(A.master);
     noiseBuf = c.createBuffer(1, c.sampleRate * 1.5, c.sampleRate);
     const d = noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -52,6 +57,13 @@
       A.pendingTrack = null;
       A.music(t);
     }
+  };
+
+  // 0 = clear, 1 = heavily muffled.
+  A.muffle = function (k) {
+    if (!A.ctx || !A.musicFilter || A.muffleK === k) return;
+    A.muffleK = k;
+    A.musicFilter.frequency.setTargetAtTime(k >= 1 ? 650 : k > 0 ? 2400 : 20000, A.ctx.currentTime, 0.08);
   };
 
   A.setMuted = function (m) {
@@ -108,8 +120,15 @@
     rail: () => { tone(1600, 0.25, 'sawtooth', 0.09, 90); noise(0.2, 0.1, 'highpass', 3000); },
     enemyShot: () => tone(520, 0.12, 'triangle', 0.05, 260),
     hit: () => tone(240, 0.05, 'square', 0.06, 120),
-    boom: () => { noise(0.45, 0.45, 'lowpass', 1600, null, null, 120); tone(120, 0.35, 'sine', 0.3, 35); },
-    bigboom: () => { noise(1.2, 0.6, 'lowpass', 1200, null, null, 60); tone(80, 1.0, 'sine', 0.45, 25); },
+    boom: () => { noise(0.06, 0.3, 'highpass', 2500); noise(0.45, 0.45, 'lowpass', 1600, null, null, 120); tone(120, 0.35, 'sine', 0.3, 35); },
+    bigboom: () => { noise(0.08, 0.4, 'highpass', 2000); noise(1.2, 0.6, 'lowpass', 1200, null, null, 60); tone(80, 1.0, 'sine', 0.45, 25); noise(2.2, 0.22, 'lowpass', 400, null, A.ctx.currentTime + 0.25, 50); },
+    graze: () => { noise(0.16, 0.13, 'bandpass', 5000, null, null, 900); tone(2200, 0.06, 'sine', 0.04, 1400); },
+    chain: (n) => { const f = 520 * Math.pow(2, Math.min(n || 2, 26) / 12); tone(f, 0.07, 'square', 0.04); tone(f * 1.5, 0.09, 'triangle', 0.035, null, null, A.ctx.currentTime + 0.035); },
+    breakReady: () => { [659, 880, 1175, 1568].forEach((f, i) => tone(f, 0.22, 'triangle', 0.08, null, null, A.ctx.currentTime + i * 0.05)); },
+    wingbreak: () => { tone(70, 1.4, 'sawtooth', 0.3, 35); noise(0.9, 0.35, 'bandpass', 300, null, null, 7000); tone(440, 0.6, 'square', 0.07, 1760); tone(660, 0.6, 'square', 0.05, 2640, null, A.ctx.currentTime + 0.05); },
+    breakEnd: () => { tone(1200, 0.5, 'sine', 0.1, 200); noise(0.8, 0.35, 'lowpass', 4000, null, null, 120); },
+    lowhull: () => { tone(1040, 0.07, 'square', 0.04); tone(1040, 0.07, 'square', 0.04, null, null, A.ctx.currentTime + 0.12); },
+    klaxon: () => { tone(330, 0.5, 'sawtooth', 0.09, 300); tone(336, 0.5, 'sawtooth', 0.07, 305); },
     hurt: () => { noise(0.25, 0.4, 'lowpass', 900); tone(160, 0.25, 'sawtooth', 0.15, 60); },
     shieldHit: () => { tone(660, 0.12, 'sine', 0.12, 330); noise(0.08, 0.12, 'highpass', 4000); },
     shieldDown: () => { tone(500, 0.4, 'square', 0.1, 80); },
@@ -135,14 +154,14 @@
     dash: () => noise(0.18, 0.2, 'bandpass', 1200, null, null, 300),
   };
 
-  A.play = function (name) {
+  A.play = function (name, arg) {
     if (!A.ctx || A.muted || !noiseBuf) return;
     const now = performance.now();
     if (A.last[name] && now - A.last[name] < 35) return;
     A.last[name] = now;
     const f = SFX[name];
     if (f) {
-      try { f(); } catch (e) { /* ignore audio scheduling errors */ }
+      try { f(arg); } catch (e) { /* ignore audio scheduling errors */ }
     }
   };
 

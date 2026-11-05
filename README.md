@@ -51,9 +51,17 @@ What each flight mission brings:
 The modes:
 
 - **Flight.** A rail shooter with flat-shaded polygon ships. Steer inside the flight box, hold fire, launch ordnance, and roll to dodge. A roll also knocks enemy shots back at them. Every flight mission ends with a multi-part boss: destroy its weapon pods to drop the core's shield.
+  - **Chains.** Kills in quick succession build a chain. The longer the chain, the more scrap each kill drops, up to double.
+  - **Close calls.** Let an enemy shot slip past close without hitting you and you get a little shield back.
+  - **WINGBREAK.** Kills, chains, close calls and shots you knock back with a roll fill the break meter at the bottom of the screen. When it is full, press Q to unleash it: for six seconds the world slows down around you, your cannon fires a triple gold stream at double rate, and nothing can hurt you. It ends in a shockwave that wipes enemy shots off the screen.
+- **Every mode** has kill chains that raise scrap, and a split-second freeze on big hits. In the gauntlet the chain is a streak of power cells, and getting hit breaks it.
 - **Speeder chase.** A pseudo-3D road with curves and hills. Shoot or ram raiders, hit boost pads, and catch the courier before it reaches the gate.
 - **On foot.** A top-down 2.5D boarding action with cover, squads that alert each other, grenades and a dash. Destroy three reactor cores, then reach extraction before reinforcements catch you.
 - **Gauntlet.** A three-lane tunnel that keeps getting faster. Jump low walls and pits, duck under bars, and switch lanes around tall walls.
+
+## Endless Sortie
+
+Clear Redstone Canyon and **Endless Sortie** opens on the title screen. Pick any flight sector you have cleared and fly it in waves until your ship is lost. Every wave ends with a boss, each new wave brings a different boss from across the campaign, and enemies get tougher every wave. Between waves your hull is patched and your ordnance is topped up. Score comes from kills (more during a chain), close calls and cleared waves. Your best score and wave are saved for each sector, and you keep the scrap and salvage when the run ends.
 
 ## Loot and upgrades
 
@@ -62,6 +70,8 @@ The modes:
 - **Power** is the average power of your gear plus your upgrade levels. Compare it with a mission's recommended power. Being under it means you deal less damage and take more.
 - Missions pay out scrap and gear based on your rank (S to D), the bonus objective, a first clear, and any loot caches you picked up.
 - Spend scrap on permanent upgrades: hull, shield, weapon damage, ordnance ammo, thrusters and salvage. You can also dismantle spare gear for scrap.
+
+- **Paint schemes.** Six paint schemes for your ship, earned with S ranks on campaign missions (1, 3, 5, 8 and all 12). Apply them in the hangar's Paint Shop, which shows a turning preview of the ship.
 
 Progress saves in the browser's localStorage.
 
@@ -73,6 +83,7 @@ Progress saves in the browser's localStorage.
 | Fire (flight, bike, foot), jump (gauntlet) | Space, J or Z (hold) | A / RT |
 | Ordnance, missile, grenade | K, X or B | X / LT |
 | Dodge roll, boost, dash, duck | Shift, L or C | LB / RB / B |
+| WINGBREAK (flight, when the meter is full) | Q, E or V | Y |
 | Aim (on foot) | Mouse, or auto-aim | Right stick |
 | Pause | Esc or P | Start |
 | Mute | M | |
@@ -91,11 +102,13 @@ On touch screens, drag on the left half of the screen to steer and use the on-sc
 | `js/campaign.js` | Mission list and branching route rules |
 | `js/common.js` | Shield and hull model, HUD widgets, radio chatter, popups, 2D particles |
 | `js/models.js` | Flat-shaded polygon renderer and all low-poly models |
-| `js/flight.js` | Flight mode: themes, enemy behaviours, spawn patterns, hazards, escort logic, bosses |
+| `js/flight.js` | Flight mode: themes, enemy behaviours, spawn patterns, hazards, escort logic, bosses, chains and WINGBREAK |
 | `js/bike.js` | Speeder chase mode |
 | `js/foot.js` | On-foot mode and its deck map |
 | `js/gauntlet.js` | Gauntlet mode |
 | `js/ui.js` | Title, campaign map, hangar, results, pause, help and settings screens |
 | `js/main.js` | Main loop, scaling, mission flow and reward calculation |
 
-To jump straight into a mission while testing, add `?mission=<id>` to the URL, for example `index.html?mission=storm`. The mission ids are `canyon`, `storm`, `frost`, `saltflat`, `dock`, `caldera`, `scrapline`, `boarding`, `lantern`, `undertow`, `crownfall` and `ace`.
+`tools/smoke.js` is a headless smoke test for the flight missions. It needs Playwright with Chromium: run `node tools/smoke.js`, or `node tools/smoke.js canyon storm` for only some missions.
+
+To jump straight into a mission while testing, add `?mission=<id>` to the URL, for example `index.html?mission=storm`. The mission ids are `canyon`, `storm`, `frost`, `saltflat`, `dock`, `caldera`, `scrapline`, `boarding`, `lantern`, `undertow`, `crownfall` and `ace`. For a sortie, use `sortie-` and a flight mission id, for example `?mission=sortie-frost`.

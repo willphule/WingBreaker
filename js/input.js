@@ -12,6 +12,7 @@
     fire: ['Space', 'KeyJ', 'KeyZ'],
     alt: ['KeyK', 'KeyX', 'KeyB'],
     dodge: ['ShiftLeft', 'ShiftRight', 'KeyL', 'KeyC'],
+    special: ['KeyQ', 'KeyE', 'KeyV'],
     pause: ['Escape', 'KeyP'],
     confirm: ['Enter', 'NumpadEnter', 'Space'],
     back: ['Escape', 'Backspace'],
@@ -81,6 +82,7 @@
     fire: { x: 862, y: 440, r: 58, label: 'FIRE' },
     alt: { x: 748, y: 478, r: 40, label: 'ALT' },
     dodge: { x: 868, y: 310, r: 40, label: 'DODGE' },
+    special: { x: 754, y: 374, r: 34, label: 'BREAK', only: 'hasBreak' },
     pause: { x: 928, y: 30, r: 22, label: 'II' },
   };
   I.touchButtons = BTN;
@@ -103,6 +105,7 @@
       let onButton = false;
       for (const k in BTN) {
         const b = BTN[k];
+        if (b.only && !(G.mode && G.mode[b.only])) continue;
         if (Math.hypot(p.x - b.x, p.y - b.y) < b.r + 14) {
           T.buttons[k] = true;
           onButton = true;
@@ -158,6 +161,7 @@
       if (b(0) || b(7)) now.fire = true;
       if (b(2) || b(6)) now.alt = true;
       if (b(4) || b(5) || b(1)) now.dodge = true;
+      if (b(3)) now.special = true;
       if (b(9)) now.pause = true;
       if (b(0)) now.confirm = true;
       if (b(1)) now.back = true;
@@ -190,6 +194,7 @@
       if (T.buttons.fire) now.fire = true;
       if (T.buttons.alt) now.alt = true;
       if (T.buttons.dodge) now.dodge = true;
+      if (T.buttons.special) now.special = true;
       if (T.buttons.pause) now.pause = true;
     }
     if (I.mouse.down && G.inGameplay && G.inGameplay()) now.fire = true;
@@ -241,6 +246,7 @@
     }
     for (const k in BTN) {
       const b = BTN[k];
+      if (b.only && !(G.mode && G.mode[b.only])) continue;
       ctx.fillStyle = T.buttons[k] ? 'rgba(255,200,90,0.35)' : 'rgba(255,255,255,0.10)';
       ctx.strokeStyle = 'rgba(255,255,255,0.3)';
       ctx.lineWidth = 2;

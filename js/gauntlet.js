@@ -12,6 +12,7 @@
 
   class Gauntlet {
     constructor(mission, stats) {
+      this.combo = new G.Combo(1.2);
       this.m = mission;
       this.st = stats;
       this.v = new G.Vitals(stats, mission);
@@ -128,7 +129,8 @@
       return this.duck && this.h < 1 ? 30 : 68;
     }
 
-    update(dt) {
+    update(rdt) {
+      const dt = this.combo.step(rdt);
       this.t += dt;
       this.phaseT += dt;
       G.radio.update(dt);
@@ -218,8 +220,8 @@
             if (Math.abs(this.h + 30 - o.y) < 50) {
               o.done = true;
               this.cells++;
-              this.scrap += 2 * this.st.scrapMult;
-              G.audio.play('scrap');
+              this.scrap += 2 * this.st.scrapMult * this.combo.kill(true);
+              G.audio.play('chain', Math.min(this.combo.chain, 24));
               if (!this.bonusDone && this.cells >= this.m.bonus.count) {
                 this.bonusDone = true;
                 G.audio.play('cache');
@@ -263,6 +265,8 @@
       o.done = true;
       this.hits++;
       this.speed *= 0.6;
+      this.combo.drop();
+      this.combo.freeze(0.08);
       const r = this.v.hit(20 * (0.9 + this.m.stage * 0.05), 1.0);
       this.fx.burst(PX + 30, this.groundY() - 40, '#ffb347', 16, 260, 22);
       G.audio.play('boom');
@@ -275,6 +279,8 @@
       this.vh = JUMP_V * 0.9;
       this.h = 1;
       this.speed *= 0.7;
+      this.combo.drop();
+      this.combo.freeze(0.08);
       const r = this.v.hit(26, 1.0);
       this.fx.burst(PX, this.groundY(), '#ff4d5e', 12, 200, 20);
       G.audio.play('hurt');
@@ -293,7 +299,7 @@
       if (this.result) return;
       this.result = G.makeResult({
         success, bonus: this.bonusDone, kills: this.cells, enemies: Math.max(1, this.cellsTotal), damageTaken: this.v.damageTaken,
-        maxHp: this.v.maxHull + this.v.maxShield, time: this.t, scrap: Math.round(this.scrap + (success ? 40 : 0)), caches: this.caches,
+        maxHp: this.v.maxHull + this.v.maxShield, time: this.t, bestChain: this.combo.best, scrap: Math.round(this.scrap + (success ? 40 : 0)), caches: this.caches,
       });
     }
 
@@ -553,6 +559,7 @@
 
     drawHUD(ctx) {
       G.hud.vitals(ctx, this.v);
+      this.combo.draw(ctx, 'STREAK');
       G.hud.scoreBox(ctx, this.scrap, `CELLS ${this.cells}/${this.cellsTotal}`);
       G.hud.objective(ctx, this.m.bonus.text, Math.min(this.cells, this.m.bonus.count), this.m.bonus.count, this.bonusDone);
       const x = G.W / 2 - 200, y = 58, w = 400;
